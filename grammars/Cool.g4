@@ -117,6 +117,10 @@ COMMENT2              : '(*' (COMMENT2 | .)*? '*)' ; // -> type(COMMENT) ; // ne
  DIVIDE               : '/' ;
  NOT                  : '~' ;
  
+ 
+ 
+ // TODO: deal with the ambiguity of two minuses 
+ 
  // comparison symbols 
  EQUAL                : '=' ;
  LESS_THAN            : '<' ;
