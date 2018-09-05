@@ -79,22 +79,17 @@ class CoolLexerTest
             Arguments.of("WPICS", ID),
             Arguments.of("\"cat\"", STRING), 
             Arguments.of("\"\\cat\"", STRING), 
-            Arguments.of("\"this is \nnot ok \"", STRING),
-            Arguments.of("\"this is \\nok \"", STRING),
+            Arguments.of("\"this is \\nnot ok \"", STRING),
+            Arguments.of("\"this is \\\nok \"", STRING),
             Arguments.of("\"if\"", STRING),
+            Arguments.of("\" have a \" is ok \"", STRING),
             Arguments.of("else", ELSE),
 
             Arguments.of("## this is a comment \n", COMMENT),
             Arguments.of("(* hello (* *)", COMMENT),
             Arguments.of("(* this is a comment *)", COMMENT),
             Arguments.of("(* comment (* hello *) *)", COMMENT)
-//          Arguments.of("+", PLUS),
-//          Arguments.of("-", MINUS),
-//          Arguments.of("*", MULTIPLY),
-//          Arguments.of("/", DIVIDE),
-//          Arguments.of("=", ASSIGN),
-//          Arguments.of("(", LPAR),
-//          Arguments.of(")", RPAR
+
 		);
 		
 		
