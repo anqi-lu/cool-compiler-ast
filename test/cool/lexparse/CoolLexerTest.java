@@ -76,12 +76,16 @@ class CoolLexerTest
 		return Stream.of(
 			Arguments.of("class", CLASS),
             Arguments.of("123", INTEGER),
-            Arguments.of("WPICS", ID),
+            Arguments.of("WPICS", TYPE),
             Arguments.of("\"cat\"", STRING), 
             Arguments.of("\"\\cat\"", STRING), 
-            Arguments.of("\"this is \\nnot ok \"", STRING),
+            Arguments.of("\"this is \n not ok \"", STRING),
+            Arguments.of("\"this is \\n ok \"", STRING),
             Arguments.of("\"this is \\\nok \"", STRING),
             Arguments.of("\"if\"", STRING),
+            Arguments.of("\"\"\"", STRING),
+            Arguments.of("\"\\\"", STRING),
+            Arguments.of("\"\t\"", STRING),
             Arguments.of("\" have a \" is ok \"", STRING),
             Arguments.of("else", ELSE),
 
@@ -91,7 +95,6 @@ class CoolLexerTest
             Arguments.of("(* comment (* hello *) *)", COMMENT)
 
 		);
-		
 		
 	}
 }

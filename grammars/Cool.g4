@@ -94,14 +94,15 @@ CARRETURN             : [\r] ;
 NULL                  : [\u0000] ;
 
 // Whitespace
-WS                    : BLANK | NEWLINE | TAB | FORMFEED | CARRETURN;
+WS                    : BLANK | TAB | FORMFEED | CARRETURN | NEWLINE;
 
 // escapes that are not characters
-INVAL_ESC             : WS | NULL;
-// valid characters with '\' such as '\c'
+INVAL_ESC             : WS | NULL ;
+// valid characters with '\' such as '\c', but these should not be white-spaces or null
 VALID_ESC             : ('\\' ~[INVAL_ESC]) ;
-// valid characters. A string shouldn't have '"' in it
-VALID_CHAR            : VALID_ESC | ~('\\') ;
+
+// valid characters. 
+VALID_CHAR            : ~([\n]) | VALID_ESC ;
 // An empty string is valid.
 STRING                : '"' VALID_CHAR* '"' ; 
 
