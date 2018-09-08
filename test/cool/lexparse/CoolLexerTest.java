@@ -57,7 +57,8 @@ class CoolLexerTest
              Arguments.of("id < -1", new int[] {ID, LESS_THAN, INTEGER}),
              Arguments.of("(false)", new int[] {FALSE}),
              Arguments.of("f(a : Object) : Object", new int[] {ID, ID, TYPE, TYPE}),
-             Arguments.of("a : Object", new int[] {ID, TYPE})
+             Arguments.of("a : Object", new int[] {ID, TYPE}),
+             Arguments.of("(*this is a comment*)", new int[] {COMMENT})
          );
      }
 	   
@@ -109,7 +110,7 @@ class CoolLexerTest
             Arguments.of("hello", ID), 
             Arguments.of("\"cat\"", STRING), 
             Arguments.of("\"\\cat\"", STRING), 
-            // Arguments.of("\"this is \n not ok \"", STRING), // should fail
+            //Arguments.of("\"this is \n not ok \"", STRING), // should fail
             Arguments.of("\"this is \\n ok \"", STRING),
             Arguments.of("\"this is \\\nok \"", STRING),
             Arguments.of("\"if\"", STRING),
@@ -117,13 +118,13 @@ class CoolLexerTest
             Arguments.of("\"\\\"", STRING),
             Arguments.of("\"\t\"", STRING),
             Arguments.of("\"\u0000\"", STRING),
-            // Arguments.of("\"hello", STRING), //should fail
+            //Arguments.of("\"hello", STRING), //should fail
             Arguments.of("\" have a \" is ok \"", STRING),
             Arguments.of("else", ELSE),
             
             Arguments.of("## this is a comment \n", COMMENT),
             Arguments.of("(* hello (* *)", COMMENT),
-            // Arguments.of("(* hello", COMMENT), // should fail
+            Arguments.of("(* hello", COMMENT), // should fail
             Arguments.of("(* this is a comment *)", COMMENT),
             Arguments.of("(* comment (* hello *) *)", COMMENT)
 

@@ -85,22 +85,38 @@ INTEGER               : MINUS?[0-9]+ ; // could be positive or negative
 TYPE                  : [A-Z] [_0-9A-Za-z]* ; // start with upper case letters
 
 
-WS                    : [ \t\r\n\f] + -> skip;
+WS                    : [ \t\r\n\f\b]+ -> skip;
 NULL                  : [\u0000] ;
 
 
 /* An empty string is valid. VALID_CHAR is defined at the bottom 
    to avoid conflict with other rules */
-STRING                : '"' VALID_CHAR* '"' ; 
+STRING                : '"' (~([\n]) | VALID_ESC)* '"' ; 
  
+/* used for matching strings 
+ * putting these at the bottom so they don't get matched before others 
+ */
+ 
+// escapes that are not characters
+INVAL_ESC             : WS | NULL ;
+
+// valid characters with '\' such as '\c', but these should not be white-spaces or null
+VALID_ESC             : ('\\' ~[INVAL_ESC]) ;
+
+ 
+
 // Comments. There are two types. 
 COMMENT               : COMMENT1 | COMMENT2 ;
 COMMENT1              : '##' .*? '\n' ; // between 2 '#'s and a new line 
-COMMENT2              : '(*' (COMMENT2 | .)*? '*)' ; // nested comments
+COMMENT2              : OPEN_COM (COMMENT2 | .)*? CLOSE_COM ; // nested comments, non-greedy
+
+// defining these so * don't get matched with left paran and multiply 
+OPEN_COM             : '(*' ; 
+CLOSE_COM            : '*)' ;
 
 // assignment operator
  ASSIGN               : '<-' ;
- 
+
 // operation symbols 
  PLUS                 : '+' ;
  MINUS                : '-' ;
@@ -122,22 +138,10 @@ COMMENT2              : '(*' (COMMENT2 | .)*? '*)' ; // nested comments
  COLN                 : ':' ;
  LBRAC                : '{' ;
  RBRAC                : '}' ;
- LPARM                : '(' ;
- RPARM                : ')' ;
+ LPARN                : '(' ;
+ RPARN                : ')' ;
  COMMA                : ',' ;
  SEMIC                : ';' ; 
  CASE_ARROW           : '=>' ;
  
  
- /* used for matching strings 
-  * putting these at the bottom so they don't get matched before others 
-  */
- 
- // escapes that are not characters
-INVAL_ESC             : WS | NULL ;
-
-// valid characters with '\' such as '\c', but these should not be white-spaces or null
-VALID_ESC             : ('\\' ~[INVAL_ESC]) ;
-
-// valid characters. Cannot be un-escaped newline 
-VALID_CHAR            : ~([\n]) | VALID_ESC ;

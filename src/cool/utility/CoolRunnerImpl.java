@@ -62,7 +62,12 @@ public class CoolRunnerImpl implements CoolRunner
 	public void setLexer(CoolLexer lexer)
 	{
 		this.lexer = lexer;
+		try {
 		nextToken = () -> lexer.nextToken();
+		} catch (CoolException e) {
+			throw new CoolException("token not recognized");
+		}
+		
 	}
 
 	
