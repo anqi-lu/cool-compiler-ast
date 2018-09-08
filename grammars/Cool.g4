@@ -8,27 +8,29 @@ package cool.lexparse;
 }
 
 // Parser rules
-// Just two rules for now to allow compilation.
+/* 
+ * For this part I decided not to replace all the symbols as the rules for better readability
+ * I think - { expr } is easier to read than LBRAC expr RBRAC
+ */
 program			      :	(classDef ';')+ EOF ;
 
 
-
-classDef              : CLASS TYPE (INHERITS TYPE)? '{' (feature';')* '}';
+classDef              : CLASS TYPE (INHERITS TYPE)? LBRAC (feature';')* RBRAC;
 
 feature 
                       : ID '(' (formal (',' formal)* ) ')' ':' TYPE '{' expr '}'
-                      | ID ':' TYPE ('<-' expr)?;
+                      | ID ':' TYPE (ASSIGN expr)?;
 
 formal                : ID ':' TYPE ;
 
 expr 
-                      : ID '<-' expr  
+                      : ID ASSIGN expr  
                       | expr'.'ID'('(expr (',' expr)*)')'
                       | ID'('(expr (',' expr)*)')'
                       | IF expr THEN expr ELSE expr FI
                       |  WHILE expr LOOP expr
                       | '{' (expr ';')+ '}'
-                      | LET ID ':' TYPE ( '<-' expr)? (',' ID ':' TYPE ( '<-' expr)?)* IN expr
+                      | LET ID ':' TYPE ( ASSIGN expr)? (',' ID ':' TYPE ( ASSIGN expr)?)* IN expr
                       | CASE expr OF (ID ':' TYPE '=>' expr',')+ ESAC
                       | NEW TYPE
                       | ISVOID expr 
@@ -77,48 +79,34 @@ OF                    : 'of' ;
 TRUE                  : 'true' ;
 
 
-//Whitespace 
-BLANK                 : [\u0020] ;
 
-ID                    : [a-z] [_0-9A-Za-z]* ; // has to start with letters
-INTEGER               : [0-9]+ ;
-TYPE                  : [A-Z] [_0-9A-Za-z]* ;
+ID                    : [a-z] [_0-9A-Za-z]* ; // has to start with lower case letters
+INTEGER               : MINUS?[0-9]+ ; // could be positive or negative 
+TYPE                  : [A-Z] [_0-9A-Za-z]* ; // start with upper case letters
 
-// Strings
-// escapes that are not valid in a string as a character 
-NEWLINE               : [\n] ;
-BACKSPACE             : [\b] ;
-TAB                   : [\t] ;
-FORMFEED              : [\f] ;
-CARRETURN             : [\r] ;
+
+WS                    : [ \t\r\n\f] + -> skip;
 NULL                  : [\u0000] ;
 
-// Whitespace
-WS                    : BLANK | TAB | FORMFEED | CARRETURN | NEWLINE;
 
-// escapes that are not characters
-INVAL_ESC             : WS | NULL ;
-// valid characters with '\' such as '\c', but these should not be white-spaces or null
-VALID_ESC             : ('\\' ~[INVAL_ESC]) ;
-
-// valid characters. 
-VALID_CHAR            : ~([\n]) | VALID_ESC ;
-// An empty string is valid.
+/* An empty string is valid. VALID_CHAR is defined at the bottom 
+   to avoid conflict with other rules */
 STRING                : '"' VALID_CHAR* '"' ; 
-
+ 
 // Comments. There are two types. 
 COMMENT               : COMMENT1 | COMMENT2 ;
-COMMENT1              : '##' .*? '\n' ; // -> type(COMMENT) ;// between 2 '#'s and a new line 
-COMMENT2              : '(*' (COMMENT2 | .)*? '*)' ; // -> type(COMMENT) ; // nested comments
+COMMENT1              : '##' .*? '\n' ; // between 2 '#'s and a new line 
+COMMENT2              : '(*' (COMMENT2 | .)*? '*)' ; // nested comments
 
+// assignment operator
+ ASSIGN               : '<-' ;
+ 
 // operation symbols 
  PLUS                 : '+' ;
  MINUS                : '-' ;
  MULTIPLY             : '*' ;
  DIVIDE               : '/' ;
  NOT                  : '~' ;
- 
- 
  
  // TODO: deal with the ambiguity of two minuses 
  
@@ -129,3 +117,27 @@ COMMENT2              : '(*' (COMMENT2 | .)*? '*)' ; // -> type(COMMENT) ; // ne
  NOT_EQUAL            : '~=' ;
  GREATER_OR_EQUAL     : '>=' ;
  GREATER_THAN         : '>' ;
+ 
+ SYMBOLS              : [:{}(),;] -> skip ;
+ COLN                 : ':' ;
+ LBRAC                : '{' ;
+ RBRAC                : '}' ;
+ LPARM                : '(' ;
+ RPARM                : ')' ;
+ COMMA                : ',' ;
+ SEMIC                : ';' ; 
+ CASE_ARROW           : '=>' ;
+ 
+ 
+ /* used for matching strings 
+  * putting these at the bottom so they don't get matched before others 
+  */
+ 
+ // escapes that are not characters
+INVAL_ESC             : WS | NULL ;
+
+// valid characters with '\' such as '\c', but these should not be white-spaces or null
+VALID_ESC             : ('\\' ~[INVAL_ESC]) ;
+
+// valid characters. Cannot be un-escaped newline 
+VALID_CHAR            : ~([\n]) | VALID_ESC ;

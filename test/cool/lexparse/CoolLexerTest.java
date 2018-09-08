@@ -32,6 +32,35 @@ import static cool.lexparse.CoolLexer.*;
  */
 class CoolLexerTest
 {
+	 @ParameterizedTest
+     @MethodSource("textTypeProvider2")
+     void recognizeMultipleToken(String text, int... types)
+     {
+	  	CoolRunner runner = newLexer(toStream(text));
+	
+        for (int i : types) {
+        	Token t = runner.nextToken();
+        	assertEquals(i, t.getType());
+        }
+        assertEquals(EOF, runner.nextToken().getType());
+     }
+
+     private static Stream<Arguments> textTypeProvider2()
+     {
+         return Stream.of(
+             Arguments.of("TYPE", new int[]{TYPE}),
+             Arguments.of("-1", new int[]{INTEGER}),
+             Arguments.of("1a", new int[]{INTEGER, ID}),
+             Arguments.of("1 b", new int[]{INTEGER, ID}),
+             Arguments.of("1a1a1a", new int[]{INTEGER, ID}),
+             Arguments.of("hello <- 123", new int[] {ID, ASSIGN, INTEGER}),
+             Arguments.of("id < -1", new int[] {ID, LESS_THAN, INTEGER}),
+             Arguments.of("(false)", new int[] {FALSE}),
+             Arguments.of("f(a : Object) : Object", new int[] {ID, ID, TYPE, TYPE}),
+             Arguments.of("a : Object", new int[] {ID, TYPE})
+         );
+     }
+	   
 	@ParameterizedTest
 	@MethodSource("textTypeProvider")
 	void recognizeSingleToken(String text, int type)
@@ -77,24 +106,29 @@ class CoolLexerTest
 			Arguments.of("class", CLASS),
             Arguments.of("123", INTEGER),
             Arguments.of("WPICS", TYPE),
+            Arguments.of("hello", ID), 
             Arguments.of("\"cat\"", STRING), 
             Arguments.of("\"\\cat\"", STRING), 
-            Arguments.of("\"this is \n not ok \"", STRING),
+            // Arguments.of("\"this is \n not ok \"", STRING), // should fail
             Arguments.of("\"this is \\n ok \"", STRING),
             Arguments.of("\"this is \\\nok \"", STRING),
             Arguments.of("\"if\"", STRING),
             Arguments.of("\"\"\"", STRING),
             Arguments.of("\"\\\"", STRING),
             Arguments.of("\"\t\"", STRING),
+            Arguments.of("\"\u0000\"", STRING),
+            // Arguments.of("\"hello", STRING), //should fail
             Arguments.of("\" have a \" is ok \"", STRING),
             Arguments.of("else", ELSE),
-
+            
             Arguments.of("## this is a comment \n", COMMENT),
             Arguments.of("(* hello (* *)", COMMENT),
+            // Arguments.of("(* hello", COMMENT), // should fail
             Arguments.of("(* this is a comment *)", COMMENT),
             Arguments.of("(* comment (* hello *) *)", COMMENT)
 
 		);
 		
 	}
+	
 }
