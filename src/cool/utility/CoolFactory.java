@@ -15,7 +15,7 @@
 package cool.utility;
 
 import org.antlr.v4.runtime.*;
-import cool.lexparse.CoolLexer;
+import cool.lexparse.*;
 
 /**
  * The CoolFactory is a factory class that provides appropriate parts of the COOL
@@ -29,12 +29,28 @@ public class CoolFactory
 	/**
 	 * Return a runner that has just a lexer.
 	 * @param input the input stream
-	 * @return tje rimmer
+	 * @return the runner
 	 */
 	public static CoolRunner makeLexerRunner(CharStream input)
 	{
 		CoolRunnerImpl runner = new CoolRunnerImpl();
 		runner.setLexer(makeLexer(input));
+		return runner;
+	}
+	
+	/**
+	 * Return a runner that has a working parser
+	 * @param input
+	 * @return input the input stream
+	 * @return the runner
+	 */
+	public static CoolRunnerImpl makeParserRunner(CharStream input)
+	{
+		final CoolRunnerImpl runner = new CoolRunnerImpl();
+		final CoolLexer lexer = makeLexer(input);
+		runner.setLexer(lexer);
+		final CoolParser parser = makeParser(lexer);
+		runner.setParser(parser);
 		return runner;
 	}
 
@@ -45,7 +61,8 @@ public class CoolFactory
 	 */
 	private static CoolLexer makeLexer(CharStream input)
 	{
-		CoolLexer lexer = new CoolLexer(input);
+		final CoolLexer lexer = new CoolLexer(input);
+		lexer.removeErrorListeners();
 		lexer.addErrorListener(
 				new BaseErrorListener() {
 					@Override
@@ -58,5 +75,25 @@ public class CoolFactory
 				}
 		);
 		return lexer;
+	}
+	
+	private static CoolParser makeParser(CoolLexer lexer)
+	{
+		final CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+		final CoolParser parser = new CoolParser(tokenStream);
+		parser.removeErrorListeners();
+		parser.addErrorListener(
+				new BaseErrorListener() {
+					@Override
+					public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
+							int line, int charPositionInLine, String msg,
+							RecognitionException e)
+					{
+						throw new CoolException(
+							e == null ? "Recoverable parser error" : e.getMessage(), e);
+					}
+				}
+		);
+		return parser;
 	}
 }

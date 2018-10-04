@@ -14,9 +14,13 @@
 
 package cool.utility;
 
+import java.util.Map;
 import java.util.function.Supplier;
-import org.antlr.v4.runtime.Token;
-import cool.lexparse.CoolLexer;
+import org.antlr.v4.runtime.*;
+
+import cool.ast.ASTCreator;
+import cool.lexparse.*;
+import cool.lexparse.CoolParser.CoolTextContext;
 
 /**
  * The implementation of the CoolRunner interface.
@@ -25,6 +29,8 @@ import cool.lexparse.CoolLexer;
 public class CoolRunnerImpl implements CoolRunner
 {
 	private CoolLexer lexer;
+	private CoolParser parser;
+	private ParserRuleContext parseTree; 
 	
 	private Supplier<Token> nextToken;
 	
@@ -41,6 +47,7 @@ public class CoolRunnerImpl implements CoolRunner
 	 * These methods will usually be called by external clients. These are the
 	 * methods called by the CoolRunner interface
 	 */
+	
 	/*
 	 * @see cool.utility.CoolRunner#nextToken()
 	 */
@@ -49,12 +56,39 @@ public class CoolRunnerImpl implements CoolRunner
 	{
 		return nextToken.get();
 	}
+	
+	/*
+	 * @see cool.utility.CoolRunner#parse()
+	 */
+	@Override
+	public ParserRuleContext parse()
+	{
+		return parser.coolText();
+	}
+	
+	/*
+	 * @see cool.utility.CoolRunner#parseExpr()
+	 */
+	@Override
+	public ParserRuleContext parseExpr()
+	{
+		return parser.expr();
+	}
 
+	/*
+	 * @see cool.utility.CoolRunner#parseFeature()
+	 */
+	@Override
+	public ParserRuleContext parseFeature()
+	{
+		return parser.feature();
+	}
 	/************************************************************************** 
 	 * Initializers
 	 * These methods are called by the factory in order to set up and 
 	 * initialize the compiler components.
 	 */
+	
 	/**
 	 * Set the lexer and change the nextToken variable
 	 * @param lexer the lexer to set
@@ -62,13 +96,48 @@ public class CoolRunnerImpl implements CoolRunner
 	public void setLexer(CoolLexer lexer)
 	{
 		this.lexer = lexer;
-		try {
 		nextToken = () -> lexer.nextToken();
-		} catch (CoolException e) {
-			throw new CoolException("token not recognized");
-		}
+	}
+
+	public void setParser(CoolParser parser)
+	{
+		this.parser = parser;
+	}
+
+	/**
+	 * @return the lexer
+	 */
+	public CoolLexer getLexer()
+	{
+		return lexer;
+	}
+
+	/**
+	 * @return the parser
+	 */
+	public CoolParser getParser()
+	{
+		return parser;
+	}
+
+	public void createAST() {
+		// TODO Auto-generated method stub
+		parseTree = parse();
+		ASTCreator creator = new ASTCreator();
+		ast = parseTree.accept(creator);
+		return ast;
 		
 	}
 
-	
+	public void typecheck() {
+		// TODO Auto-generated method stub
+		
+		
+	}
+
+	public Map<String, byte[]> compile() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

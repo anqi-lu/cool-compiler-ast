@@ -58,7 +58,8 @@ class CoolLexerTest
              Arguments.of("(false)", new int[] {FALSE}),
              Arguments.of("f(a : Object) : Object", new int[] {ID, ID, TYPE, TYPE}),
              Arguments.of("a : Object", new int[] {ID, TYPE}),
-             Arguments.of("(*this is a comment*)", new int[] {COMMENT})
+             Arguments.of("a : Object ;", new int[] {ID, TYPE}),
+             Arguments.of("(*this is a comment*)", new int[] {COMMENT2})
          );
      }
 	   
@@ -122,11 +123,12 @@ class CoolLexerTest
             Arguments.of("\" have a \" is ok \"", STRING),
             Arguments.of("else", ELSE),
             
-            Arguments.of("## this is a comment \n", COMMENT),
-            Arguments.of("(* hello (* *)", COMMENT),
-            Arguments.of("(* hello", COMMENT), // should fail
-            Arguments.of("(* this is a comment *)", COMMENT),
-            Arguments.of("(* comment (* hello *) *)", COMMENT)
+            Arguments.of("# this is a comment \n", COMMENT1),
+            Arguments.of("# this is a comment", COMMENT1),
+            Arguments.of("(* hello (* *)", COMMENT2),
+            Arguments.of("(* hello", COMMENT2), // should fail
+            Arguments.of("(* this is a comment *)", COMMENT2),
+            Arguments.of("(* comment (* hello *) *)", COMMENT2)
 
 		);
 		

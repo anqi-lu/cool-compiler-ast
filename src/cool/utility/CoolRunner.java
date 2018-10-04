@@ -14,7 +14,7 @@
 
 package cool.utility;
 
-import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.*;
 
 /**
  * The CoolRunner is an object produced by the CoolFactory. It provides handles
@@ -27,7 +27,25 @@ public interface CoolRunner
 {
 	/**
 	 * Scan the next token using the CoolLexer in the runner.
-	 * @return
+	 * @return the next token.
 	 */
 	Token nextToken();
+	
+	/**
+	 * Parse the input using the CoolParser in the runner.
+	 * @return the parse tree
+	 */
+	ParserRuleContext parse();
+	
+	/**
+	 * Parse the input using the CoolParser in the runner.
+	 * @return the parse tree for expressions
+	 */
+	ParserRuleContext parseExpr();
+	
+	/**
+	 * Parse the input using the CoolParser in the runner.
+	 * @return the parse tree for features
+	 */
+	ParserRuleContext parseFeature();
 }
