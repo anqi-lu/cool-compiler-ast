@@ -9,33 +9,40 @@ package cool.lexparse;
 
 
 // Parser rules
-coolText               : (classDef ';')+ EOF ;
+coolText              : classes+=classDef+ EOF ;
 
-classDef              : CLASS TYPE (INHERITS TYPE)? '{' (feature';')* '}';
+// (INHERITS inherits+=TYPE)? 
+classDef              : (CLASS type=TYPE (INHERITS inherits=TYPE)? '{' features=feature '}' ';');
 
-feature 
-                      : ID '(' (formal (',' formal)*)* ')' ':' TYPE '{' expr '}'
-                      | ID ':' TYPE (ASSIGN expr)? ;
+feature               : ((methods+=method ';') | (variables+=variable ';'))*;
 
-formal                : ID ':' TYPE ;
+method                : name=ID '(' (paramaters+=formal (',' paramaters+=formal)*)* ')' ':' type=TYPE '{' body=expr '}' ;
+variable              : id=ID ':' type=TYPE (ASSIGN value=expr)? ;
+                      
+formal                : id=ID ':' type=TYPE ;
 
-expr 			      :  expr'.'ID'('(expr (',' expr)*)?')'
-					  | ID'('(expr (',' expr)*)?')'
-                      | IF expr THEN expr ELSE expr FI
-                      | WHILE expr LOOP expr POOL
-					  | '{' (expr ';')+ '}'
-					  | LET ID ':' TYPE ( ASSIGN expr)? (',' ID ':' TYPE ( ASSIGN expr)?)* IN expr
-                      | CASE expr OF (ID ':' TYPE '=>' expr';')+ ESAC
-                      | NEW TYPE
-					  | ISVOID expr
-					  | expr multExpr expr
-					  | expr plusExpr expr
-					  | <assoc=right> expr (EQUAL | NOT_EQUAL) expr
-					  | expr compExpr expr
-					  | NOT expr
-					  | ID ASSIGN expr
-				   	  | term 
-				   	  | MINUS* term;
+
+
+expr 			      : object=expr'.'methodName=ID'('(args+=expr (',' args+=expr)*)?')'           #methodCallExpr
+					  | methodName=ID'('(args+=expr (',' args+=expr)*)?')'                         #methodCallExpr
+                      | IF expr THEN expr ELSE expr FI                                             #ifExpr
+                      | WHILE expr LOOP expr POOL                                                  #whileExpr
+					  | '{' (expr ';')+ '}'                                                        #exprList
+					  | LET ID ':' TYPE ( ASSIGN expr)? (',' ID ':' TYPE ( ASSIGN expr)?)* IN expr #letExpr
+                      | CASE expr OF (ID ':' TYPE '=>' expr';')+ ESAC                              #caseExpr
+                      | NEW TYPE                                                                   #newExpr
+					  | ISVOID expr                                                                #isvoidExpr
+					  | left=expr multExpr right=expr                                     #binaryExpr 
+					  | left=expr plusExpr right=expr                                     #binaryExpr
+					  | <assoc=right> left=expr (EQUAL | NOT_EQUAL) right=expr            #binaryExpr
+					  | left=expr  compExpr right=expr                                    #binaryExpr
+					  
+					  | '(' expr ')'                                                               #unaryExpr
+					  | NOT expr                                                                   #unaryExpr
+					  | ID ASSIGN expr                                                             #assignExpr
+				   	  | MINUS expr                                                                 #unaryExpr
+				   	  | term                                                                       #terminal
+				   	  ;
 						
 multExpr              : MULTIPLY | DIVIDE ;
 plusExpr              : PLUS | MINUS ;
@@ -44,13 +51,12 @@ compExpr              : LESS_THAN
 					  | GREATER_OR_EQUAL 
 					  | GREATER_THAN ;
 
-term                  : '(' expr ')'        
-                      | ID 
-					  | INTEGER 
-					  | STRING 
-					  | TRUE 
-					  | FALSE ;
-
+term                  : idTerm=ID      
+					  | intTerm=INTEGER 
+					  | strTerm=STRING
+					  | boolTerm=TRUE
+					  | boolTerm=FALSE
+					  ;
 
 // Lexer rules:
 // We assume that reserved words are recognized by the scanner rather than just

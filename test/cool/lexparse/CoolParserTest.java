@@ -51,8 +51,11 @@ class CoolParserTest
 	@Test
 	void sandbox()
 	{
-		doParseExpr("a=b~=c>d~=e=f");
- 		// showTree();
+		doParseExpr(" case xcar.print() of\n" + 
+				"                dummy : Book => outStr(\"- dynamic type was Book -\\n\");\n" + 
+				"                dummy : Article => outStr(\"- dynamic type was Article -\\n\");\n" + 
+				"            esac;\n");
+ 		//showTree();
 	}
 	
 	@ParameterizedTest
@@ -79,7 +82,7 @@ class CoolParserTest
 	// Use the following test if you have test files in a directory.
 	@ParameterizedTest
 	@ValueSource( strings = {
-		"book_list.cl", "cells.cl", "cool.cl", "test.cl", "hello_world.cl", "complex.cl", "io.cl", "life.cl", "list.cl"
+		"book_list.cl", "cells.cl", "cool.cl", "test.cl", "hello_world.cl", "complex.cl", "io.cl", "life.cl", "list.cl", "hello_01.cl"
 	})
 	void parseFile(String f) throws IOException
 	{
@@ -162,6 +165,7 @@ class CoolParserTest
 			Arguments.of("(new A)"),
 			Arguments.of("-(-4)"),
 			Arguments.of("(new A).out_a();"),
+			Arguments.of("x = -x;"),
 			Arguments.of("1 + 1 # we could think of \"halt\" as SIGTERM"),
 			Arguments.of(    " case xcar.print() of\n" + 
 					"                dummy : Book => outStr(\"- dynamic type was Book -\\n\");\n" + 

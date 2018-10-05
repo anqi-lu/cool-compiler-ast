@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 import org.antlr.v4.runtime.*;
 
 import cool.ast.ASTCreator;
+import cool.ast.ASTNode;
 import cool.lexparse.*;
 import cool.lexparse.CoolParser.CoolTextContext;
 
@@ -30,7 +31,9 @@ public class CoolRunnerImpl implements CoolRunner
 {
 	private CoolLexer lexer;
 	private CoolParser parser;
-	private ParserRuleContext parseTree; 
+	private ParserRuleContext parseTree;
+	
+	private ASTNode ast;
 	
 	private Supplier<Token> nextToken;
 	
@@ -125,8 +128,6 @@ public class CoolRunnerImpl implements CoolRunner
 		parseTree = parse();
 		ASTCreator creator = new ASTCreator();
 		ast = parseTree.accept(creator);
-		return ast;
-		
 	}
 
 	public void typecheck() {
@@ -138,6 +139,16 @@ public class CoolRunnerImpl implements CoolRunner
 	public Map<String, byte[]> compile() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public ParserRuleContext getParseTree() {
+		// TODO Auto-generated method stub
+		return parseTree;
+	}
+
+	public ASTNode getAst() {
+		// TODO Auto-generated method stub
+		return ast;
 	}
 
 }

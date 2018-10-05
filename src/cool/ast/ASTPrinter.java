@@ -51,6 +51,7 @@ public class ASTPrinter implements ASTVisitor<String>
     @Override
     public String visit(CoolText node)
     {
+    	System.out.println("visiting CoolText. (printer)");
         treeString.append("Cool text file\n");
         visitChildren(node);
         return treeString.toString();
@@ -62,8 +63,12 @@ public class ASTPrinter implements ASTVisitor<String>
     @Override
     public String visit(Type t)
     {
-        treeString.append(indent() + "Class: " + t.binding.descriptor.className + " inherits " 
-            + t.binding.descriptor.inherits + NL);
+        System.out.println("visiting type. (printer)");
+    	treeString.append(indent() + 
+        		"Class: " + 
+        		t.binding.descriptor.className + 
+        		" inherits " + 
+        		t.binding.descriptor.inherits + NL);
         visitChildren(t);
         return null;
     }
@@ -76,6 +81,7 @@ public class ASTPrinter implements ASTVisitor<String>
     {   
         treeString.append(indent() + "Variable (" + v.binding.getSymbol()
             + " : " + v.binding.getSymbolType() + ")" + NL);
+        System.out.println("visiting variable (printer);");
         visitChildren(v);
         return null;
     }
@@ -86,130 +92,131 @@ public class ASTPrinter implements ASTVisitor<String>
     @Override
     public String visit(Method m)
     {
+    	System.out.println("visiting method (printer).");
         treeString.append(indent() + "Method: " + m.descriptor + NL);
         visitChildren(m);
         return null;
     }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Assign)
-     */
-    @Override
-    public String visit(Assign node)
-    {
-        treeString.append(indent() + "<-" + nodeClass(node) + NL);
-        visitChildren(node);
-        return null;
-    }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.If)
-     */
-    @Override
-    public String visit(If node)
-    {
-        treeString.append(indent() + "If (" + node.nodeClass + ")" + NL);
-        visitChildren(node);
-        return null;
-    }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.While)
-     */
-    @Override
-    public String visit(While node)
-    {
-        treeString.append(indent() + "While (" + node.nodeClass + ")" + NL);
-        visitChildren(node);
-        return null;
-    }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.ExprList)
-     */
-    @Override
-    public String visit(ExprList node)
-    {
-        treeString.append(indent() + "Expression list (" + node.nodeClass + ")" + NL);
-        visitChildren(node);
-        return null;
-    }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Let)
-     */
-    @Override
-    public String visit(Let node)
-    {
-        treeString.append(indent() + "Let" + NL);
-        visitChildren(node);
-        return null;
-    }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Case)
-     */
-    @Override
-    public String visit(Case node)
-    {
-        treeString.append(indent() + "Case" + NL);
-        visitChildren(node);
-        return null;
-    }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.CaseAlt)
-     */
-    @Override
-    public String visit(CaseAlt node)
-    {
-        treeString.append(indent() + "Case alternative" + NL);
-        visitChildren(node);
-        return null;
-    }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.New)
-     */
-    @Override
-    public String visit(New node)
-    {
-        treeString.append(indent() + "new " + node.type + NL);
-        return null;
-    }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Unary)
-     */
-    @Override
-    public String visit(Unary node)
-    {
-        treeString.append(indent() + node.token.getText() + NL);
-        visitChildren(node);
-        return null;
-    }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Binary)
-     */
-    @Override
-    public String visit(Binary node)
-    {
-        treeString.append(indent() + node.token.getText() + NL);
-        visitChildren(node);
-        return null;
-    }
-
-    /*
-     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.MethodCall)
-     */
-    @Override
-    public String visit(MethodCall node)
-    {
-        treeString.append(indent() + node.dispatch + " method call" + NL);
-        visitChildren(node);
-        return null;
-    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Assign)
+//     */
+//    @Override
+//    public String visit(Assign node)
+//    {
+//        treeString.append(indent() + "<-" + nodeClass(node) + NL);
+//        visitChildren(node);
+//        return null;
+//    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.If)
+//     */
+//    @Override
+//    public String visit(If node)
+//    {
+//        treeString.append(indent() + "If (" + node.nodeClass + ")" + NL);
+//        visitChildren(node);
+//        return null;
+//    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.While)
+//     */
+//    @Override
+//    public String visit(While node)
+//    {
+//        treeString.append(indent() + "While (" + node.nodeClass + ")" + NL);
+//        visitChildren(node);
+//        return null;
+//    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.ExprList)
+//     */
+//    @Override
+//    public String visit(ExprList node)
+//    {
+//        treeString.append(indent() + "Expression list (" + node.nodeClass + ")" + NL);
+//        visitChildren(node);
+//        return null;
+//    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Let)
+//     */
+//    @Override
+//    public String visit(Let node)
+//    {
+//        treeString.append(indent() + "Let" + NL);
+//        visitChildren(node);
+//        return null;
+//    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Case)
+//     */
+//    @Override
+//    public String visit(Case node)
+//    {
+//        treeString.append(indent() + "Case" + NL);
+//        visitChildren(node);
+//        return null;
+//    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.CaseAlt)
+//     */
+//    @Override
+//    public String visit(CaseAlt node)
+//    {
+//        treeString.append(indent() + "Case alternative" + NL);
+//        visitChildren(node);
+//        return null;
+//    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.New)
+//     */
+//    @Override
+//    public String visit(New node)
+//    {
+//        treeString.append(indent() + "new " + node.type + NL);
+//        return null;
+//    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Unary)
+//     */
+//    @Override
+//    public String visit(Unary node)
+//    {
+//        treeString.append(indent() + node.token.getText() + NL);
+//        visitChildren(node);
+//        return null;
+//    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Binary)
+//     */
+//    @Override
+//    public String visit(Binary node)
+//    {
+//        treeString.append(indent() + node.token.getText() + NL);
+//        visitChildren(node);
+//        return null;
+//    }
+//
+//    /*
+//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.MethodCall)
+//     */
+//    @Override
+//    public String visit(MethodCall node)
+//    {
+//        treeString.append(indent() + node.dispatch + " method call" + NL);
+//        visitChildren(node);
+//        return null;
+//    }
 
     /*
      * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Terminal)
@@ -217,6 +224,7 @@ public class ASTPrinter implements ASTVisitor<String>
     @Override
     public String visit(Terminal t)
     {
+    	System.out.println("visting terminal. (printer)");
         StringBuilder sb = new StringBuilder(indent());
         switch (t.terminalType) {
         case tInt: 
@@ -228,16 +236,16 @@ public class ASTPrinter implements ASTVisitor<String>
         case tBool:
             sb.append("Bool (" + t.token.getText() + ")");
             break;
-        case tType:
-            sb.append("Type (" + t.token.getText() + ")");
-            break;
-        case tMethod:
+//        case tType:
+//            sb.append("Type (" + t.token.getText() + ")");
+//            break;
+        case tMethodName:
             sb.append("Method call (" + t.token.getText());
             sb.append(t.binding == null ? "*" : " in class " 
                 + t.binding.getClassWhereDefined());
             sb.append(')');
             break;
-        case tID:
+        case tClassName:
             if (t.binding == null) {
                 sb.append("ID* (" + t.token.getText() + ")");
             } else {    // there is a binding
@@ -274,6 +282,7 @@ public class ASTPrinter implements ASTVisitor<String>
     @Override
     public String visitChildren(ASTNode node)
     {
+    	System.out.println("Visting children. (printer)");
         indentLevel++;
         ASTVisitor.super.visitChildren(node);
         indentLevel--;

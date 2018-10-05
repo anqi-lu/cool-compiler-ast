@@ -1,5 +1,5 @@
 package cool.ast;
 
-public class ASTBaseVisitorWithParameter {
+public interface ASTBaseVisitorWithParameter<T,P> {
 
 }

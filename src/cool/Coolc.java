@@ -1,3 +1,5 @@
+package cool;
+
 /*******************************************************************************
  * This files was developed for CS4533/CS544: 
  *     Techniques of Program Translation/Compiler Construction.
@@ -122,10 +124,10 @@ public class Coolc
             System.out.println("\n------------------------------\nParse tree:\n\n");
             System.out.println(runner.getParseTree().toStringTree(runner.getParser()));
         }
-        
-        if (displayGUI) {
-            showGUI(runner.getParser(), runner.getParseTree());
-        }
+//        
+//        if (displayGUI) {
+//            showGUI(runner.getParser(), runner.getParseTree());
+//        }
         
         if (displayAST) {
             System.out.println("\n------------------------------\nAbstract Syntax Tree:\n\n");
@@ -214,6 +216,9 @@ public class Coolc
     public static void main(String[] args) throws Exception
     {
         Coolc tool = new Coolc();
+        for (String s : args) {
+        	System.out.println(s);
+        }
         tool.executeTool(args);
     }
 

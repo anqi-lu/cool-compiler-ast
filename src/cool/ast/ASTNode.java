@@ -6,7 +6,7 @@ import cool.symbol.*;
 
 public abstract class ASTNode {
 	public enum ASTNodeType {
-		
+		nCoolText, nType, nVariable, nMethod, nAssign, nIf, nWhile, nExprList, nLet, nCase, nNew, nUnary, nBinary, nMethodCall, nID, nTerminal
 	}
 	
 	public ASTNodeType nodeType;
@@ -29,23 +29,22 @@ public abstract class ASTNode {
 		scope = TableManager.getInstance().getCurrentTable(); 
 	}
 	
-	public <T> T accept(ASTVisitor<? extends T> visitor) { return visitor.visit(this); }
-	public <T, P> T accept(ASTVisitorWithParameter<? extends T, P> visitor, P param) 
-	{
-		return visitor.visit(this, param);
-	}
+	abstract public <T> T accept(ASTVisitor<? extends T> visitor);
+	
+	/** Constructor */
+	//abstract public <T, P> T accept(ASTVisitorWithParameter<? extends T, P> visitor, P param);
 	
 	public ASTNode getChild(int i)
 	{
 		return children.get(i);
 	}
 	
-	public void addChild(int i, ASTNode child)
+	public void addChild(ASTNode child)
 	{
-		
+		children.add(child);
 	}
 	
-	public ASTNode removeChild(int i)
+	public void removeChild(int i)
 	{
 		
 	}
