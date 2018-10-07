@@ -1,9 +1,16 @@
 package cool.ast;
 
+import cool.ast.ASTNodeFactory.Assign;
+import cool.ast.ASTNodeFactory.BinaryExpr;
+import cool.ast.ASTNodeFactory.Case;
+import cool.ast.ASTNodeFactory.CaseAlt;
 import cool.ast.ASTNodeFactory.CoolText;
+import cool.ast.ASTNodeFactory.ExprList;
+import cool.ast.ASTNodeFactory.If;
 import cool.ast.ASTNodeFactory.Method;
 import cool.ast.ASTNodeFactory.Terminal;
 import cool.ast.ASTNodeFactory.Type;
+import cool.ast.ASTNodeFactory.UnaryExpr;
 import cool.ast.ASTNodeFactory.Variable;
 
 public interface ASTVisitor<T> {
@@ -12,15 +19,16 @@ public interface ASTVisitor<T> {
 	public default T visit(Type node) { return visitChildren(node); }
 	public default T visit(Variable node) { return visitChildren(node); }
 	public default T visit(Method node) { return visitChildren(node); }
-//	public default T visit(Assign node) { return visitChildren(node); }
-//	public default T visit(If node) { return visitChildren(node); }
+	public default T visit(Assign node) { return visitChildren(node); }
+	public default T visit(If node) { return visitChildren(node); }
 //	public default T visit(While node) { return visitChildren(node); }
-//	public default T visit(ExprList node) { return visitChildren(node); }
+	public default T visit(ExprList node) { return visitChildren(node); }
 //	public default T visit(Let node) { return visitChildren(node); }
-//	public default T visit(Case node) { return visitChildren(node); }
+	public default T visit(Case node) { return visitChildren(node); }
+	public default T visit(CaseAlt node) { return visitChildren(node); }
 //	public default T visit(New node) { return visitChildren(node); }
-//	public default T visit(Unary node) { return visitChildren(node); }
-//	public default T visit(Binary node) { return visitChildren(node); }
+	public default T visit(UnaryExpr node) { return visitChildren(node); }
+	public default T visit(BinaryExpr node) { return visitChildren(node); }
 //	public default T visit(MethodCall node) { return visitChildren(node); }
 	public default T visit(Terminal node) { return visitChildren(node); }
 	

@@ -21,36 +21,31 @@ variable              : id=ID ':' type=TYPE (ASSIGN value=expr)? ;
                       
 formal                : id=ID ':' type=TYPE ;
 
-
-
 expr 			      : object=expr'.'methodName=ID'('(args+=expr (',' args+=expr)*)?')'           #methodCallExpr
 					  | methodName=ID'('(args+=expr (',' args+=expr)*)?')'                         #methodCallExpr
-                      | IF expr THEN expr ELSE expr FI                                             #ifExpr
+                      | IF cond=expr THEN thenExpr=expr ELSE elseExpr=expr FI                      #ifExpr
                       | WHILE expr LOOP expr POOL                                                  #whileExpr
-					  | '{' (expr ';')+ '}'                                                        #exprList
+					  | '{' (exprs+=expr ';')+ '}'                                                 #exprList
 					  | LET ID ':' TYPE ( ASSIGN expr)? (',' ID ':' TYPE ( ASSIGN expr)?)* IN expr #letExpr
-                      | CASE expr OF (ID ':' TYPE '=>' expr';')+ ESAC                              #caseExpr
+                      | CASE exp=expr OF alts+=caseAltExpr+ ESAC                                   #caseExpr
                       | NEW TYPE                                                                   #newExpr
-					  | ISVOID expr                                                                #isvoidExpr
-					  | left=expr multExpr right=expr                                     #binaryExpr 
-					  | left=expr plusExpr right=expr                                     #binaryExpr
-					  | <assoc=right> left=expr (EQUAL | NOT_EQUAL) right=expr            #binaryExpr
-					  | left=expr  compExpr right=expr                                    #binaryExpr
-					  
-					  | '(' expr ')'                                                               #unaryExpr
-					  | NOT expr                                                                   #unaryExpr
-					  | ID ASSIGN expr                                                             #assignExpr
-				   	  | MINUS expr                                                                 #unaryExpr
+					  | op=ISVOID exp=expr                                                         #isvoidExpr
+					  | left=expr op=(MULTIPLY | DIVIDE) right=expr                                #binaryExpr 
+					  | left=expr op=(PLUS | MINUS) right=expr                                     #binaryExpr
+					  | <assoc=right> left=expr op=(EQUAL | NOT_EQUAL) right=expr                  #binaryExpr
+					  | left=expr  op=(LESS_THAN 
+					  				| LESS_OR_EQUAL	
+					  				| GREATER_OR_EQUAL 
+					  				| GREATER_THAN) 
+					  	right=expr                                                                 #binaryExpr
+					  | '(' exp=expr ')'                                                           #unaryExpr
+					  | op=NOT exp=expr                                                            #unaryExpr
+					  | id=ID ASSIGN value=expr                                                    #assignExpr
+				   	  | op=MINUS exp=expr                                                          #unaryExpr
 				   	  | term                                                                       #terminal
 				   	  ;
-						
-multExpr              : MULTIPLY | DIVIDE ;
-plusExpr              : PLUS | MINUS ;
-compExpr              : LESS_THAN 
-					  | LESS_OR_EQUAL	
-					  | GREATER_OR_EQUAL 
-					  | GREATER_THAN ;
-
+		
+caseAltExpr           : (id=ID ':' type=TYPE '=>' exp=expr';');				
 term                  : idTerm=ID      
 					  | intTerm=INTEGER 
 					  | strTerm=STRING

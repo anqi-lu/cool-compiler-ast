@@ -1,14 +1,14 @@
 class Main {
     i : Int;
-    j : Int <- 1;
     k : Str <- "yummy";
-    x : Bool <- true;
-    y : Bool <- false;
+    
     main() : SELF_TYPE {
 	{
-        "pass";
+        case a = 7 of
+                dummy : Book => 1;
+                d : Article => 2;
+        esac;
 	}
     };
 
-    print_list(a: Str) : Object { "sdf" };
 } ;
