@@ -3,6 +3,7 @@ package cool.ast;
 import org.antlr.v4.runtime.Token;
 
 import cool.ast.ASTNodeFactory.BinaryExpr.BinaryOperatorType;
+import cool.ast.ASTNodeFactory.MethodCall.DispatchType;
 import cool.ast.ASTNodeFactory.UnaryExpr.UnaryOperatorType;
 import cool.ast.ASTNodeFactory.Terminal.TerminalType;
 import cool.symbol.Binding;
@@ -29,12 +30,16 @@ public class ASTNodeFactory {
 		return new Variable(binding); 
 	}
 
-	public static Method makeMethod(MethodDescriptor descriptor) {
-		return new Method(descriptor);
+	public static Method makeMethod(MethodBinding mb, MethodDescriptor descriptor) {
+		return new Method(mb, descriptor);
 	}
 
 	public static ExprList makeExprList() {
 		return new ExprList();
+	}
+	
+	public static ParamExpr makeParamExpr() {
+		return new ParamExpr();
 	}
 	
 	public static Assign makeAssign(String id, ObjectBinding ob) {
@@ -53,6 +58,10 @@ public class ASTNodeFactory {
 		return new If();
 	}
 	
+	public static While makeWhile() {
+		return new While();
+	}
+	
 	public static Case makeCase() {
 		return new Case();
 	}
@@ -60,22 +69,45 @@ public class ASTNodeFactory {
 	public static CaseAlt makeCaseAlt(Binding b) {
 		return new CaseAlt(b);
 	}
+	
+	public static Let makeLet() {
+		return new Let();
+	}
+	
+	public static New makeNew(String type) {
+		return new New(type);
+	}
+	
+	public static MethodCall makeMethodCall(String methodName, DispatchType type) {
+		return new MethodCall(methodName, type);
+	}
+	
 	// TODO(alu): Refactor so that it accepts a binding.
 	public static Terminal makeConstant(Token t, Terminal.TerminalType type) {
-		return new Terminal(t, type); 
+		return new Terminal(t,null, type); 
 	}
 
 	public static Terminal makeIDTerminal(Binding b) {
-		return new Terminal(b.getToken(), TerminalType.tVarName);
+		System.out.println("making id terminal");
+		if (b  == null) {
+			System.out.println("binding null");
+		}
+
+		return new Terminal(b.getToken(), b, TerminalType.tID);
 	}
 	
 	public static Terminal makeIDTerminal(Token t) {
-		return new Terminal(t, TerminalType.tMethodName);
+		return new Terminal(t, null, TerminalType.tID);
+	}
+	
+	public static Terminal makeMethodTerminal(Token t) {
+		return new Terminal(t, null, TerminalType.tMethod);
 	}
 	
 	public static Terminal makeTypeTerminal(Token t) {
-		return new Terminal(t, TerminalType.tTypeName);
+		return new Terminal(t, null, TerminalType.tType);
 	}
+	
 	/**
 	 * Node Classes
 	 */
@@ -90,6 +122,9 @@ public class ASTNodeFactory {
 		}
 	}
 	
+	/**
+	 * Node Classes
+	 */
 	public static class Type extends ASTNode {
 		public ClassBinding binding;
  		private Type() {
@@ -103,6 +138,9 @@ public class ASTNodeFactory {
 		}
 	}
 	
+	/**
+	 * Node Classes
+	 */
 	public static class Variable extends ASTNode {
 		public ObjectBinding binding;
  		private Variable(ObjectBinding binding) {
@@ -117,13 +155,17 @@ public class ASTNodeFactory {
 		}
 	}
 	
+	/**
+	 * Node Classes
+	 */
 	public static class Method extends ASTNode {
-
+		public MethodBinding binding;
 		public MethodDescriptor descriptor;
 
-		private Method(MethodDescriptor descriptor) {
+		private Method(MethodBinding mb, MethodDescriptor descriptor) {
 			super();
 			nodeType = ASTNodeType.nMethod;
+			this.binding = mb;
 			this.descriptor = descriptor;
 		}
 		
@@ -134,6 +176,9 @@ public class ASTNodeFactory {
 		
 	}
 	
+	/**
+	 * Node Classes
+	 */
 	public static class ExprList extends ASTNode {
 		private ExprList() {
 			super();
@@ -146,6 +191,24 @@ public class ASTNodeFactory {
 		}
 	}
 	
+	/**
+	 * 
+	 */
+	public static class ParamExpr extends ASTNode {
+		private ParamExpr() {
+			super();
+			nodeType = ASTNodeType.nParamExpr;
+		}
+		
+		@Override
+		public <T> T accept(ASTVisitor<? extends T> visitor) {
+			return visitor.visit(this);
+		}
+	}
+	
+	/**
+	 * Node Classes
+	 */
 	public static class Assign extends ASTNode {
 		public String id;
 		public ObjectBinding ob; 
@@ -163,6 +226,9 @@ public class ASTNodeFactory {
 		}
 	}
 	
+	/**
+	 * Node Classes
+	 */
 	public static class BinaryExpr extends ASTNode {
 		public static enum BinaryOperatorType {
 			PLUS, 
@@ -190,6 +256,9 @@ public class ASTNodeFactory {
 		}
 	}
 	
+	/**
+	 * Node Classes
+	 */
 	public static class UnaryExpr extends ASTNode {
 		public static enum UnaryOperatorType {
 			NOT,
@@ -210,6 +279,9 @@ public class ASTNodeFactory {
 		}
 	}
 	
+	/**
+	 * If Node 
+	 */
 	public static class If extends ASTNode {
 		private If() {
 			super();
@@ -222,6 +294,23 @@ public class ASTNodeFactory {
 		}
 	}
 	
+	/**
+	 * While Node 
+	 */
+	public static class While extends ASTNode {
+		private While() {
+			super();
+			nodeType = ASTNodeType.nWhile;
+		}
+		@Override
+		public <T> T accept(ASTVisitor<? extends T> visitor) {
+			return visitor.visit(this);
+		}
+	}
+	
+	/**
+	 * Case Node
+	 */
 	public static class Case extends ASTNode {
 		private Case() {
 			super();
@@ -234,6 +323,10 @@ public class ASTNodeFactory {
 		}
 	}
 	
+	/**
+	 * CaseAlt Node
+	 * used for conditions nested in Case expression
+	 */
 	public static class CaseAlt extends ASTNode {
 		public Binding binding;
 		private CaseAlt(Binding b) {
@@ -248,16 +341,74 @@ public class ASTNodeFactory {
 		}
 	}
 	
+	/**
+	 * Let Node
+	 */
+	public static class Let extends ASTNode {
+		private Let() {
+			super();
+			nodeType = ASTNodeType.nLet;
+		}
+		@Override
+		public <T> T accept(ASTVisitor<? extends T> visitor) {
+			return visitor.visit(this);
+		}
+	}
+	
+	/**
+	 * New node
+	 */
+	public static class New extends ASTNode {
+		public String type;
+
+		private New(String type) {
+			super();
+			nodeType = ASTNodeType.nNew;
+			this.type = type;
+		}
+		
+		@Override
+		public <T> T accept(ASTVisitor<? extends T> visitor) {
+			return visitor.visit(this);
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	public static class MethodCall extends ASTNode {
+		public static enum DispatchType {mcObject, mcLocal};
+		public String methodName;
+		public DispatchType dispatchType;
+		
+		private MethodCall(String methodName, DispatchType type) {
+			super();
+			nodeType = ASTNodeType.nMethodCall;
+			this.methodName = methodName;
+			this.dispatchType = type;
+		}
+		
+ 		@Override
+		public <T> T accept(ASTVisitor<? extends T> visitor) {
+			return visitor.visit(this);
+		}
+	}
+	
+	/**
+	 * Terminal Node
+	 * Can be Int, Str, Bool, ID or Type 
+	 */
 	public static class Terminal extends ASTNode {
-		public static enum TerminalType {tInt, tStr, tBool, tVarName, tMethodName, tTypeName};
+		public static enum TerminalType {tInt, tStr, tBool, tID, tMethod, tType};
 		public Binding binding;
 		public TerminalType terminalType;
 		public String strValue;
 		
-		private Terminal(Token t, Terminal.TerminalType type) {
+		private Terminal(Token t, Binding b, Terminal.TerminalType type) {
 			super();
 			nodeType = ASTNodeType.nTerminal;
 			token = t;
+			binding = b;
 			this.terminalType = type;
 		}
 		

@@ -16,7 +16,7 @@ classDef              : (CLASS type=TYPE (INHERITS inherits=TYPE)? '{' features=
 
 feature               : ((methods+=method ';') | (variables+=variable ';'))*;
 
-method                : name=ID '(' (paramaters+=formal (',' paramaters+=formal)*)* ')' ':' type=TYPE '{' body=expr '}' ;
+method                : id=ID '(' (paramaters+=formal (',' paramaters+=formal)*)? ')' ':' type=TYPE '{' body=expr '}' ;
 variable              : id=ID ':' type=TYPE (ASSIGN value=expr)? ;
                       
 formal                : id=ID ':' type=TYPE ;
@@ -24,11 +24,11 @@ formal                : id=ID ':' type=TYPE ;
 expr 			      : object=expr'.'methodName=ID'('(args+=expr (',' args+=expr)*)?')'           #methodCallExpr
 					  | methodName=ID'('(args+=expr (',' args+=expr)*)?')'                         #methodCallExpr
                       | IF cond=expr THEN thenExpr=expr ELSE elseExpr=expr FI                      #ifExpr
-                      | WHILE expr LOOP expr POOL                                                  #whileExpr
+                      | WHILE cond=expr LOOP exp=expr POOL                                         #whileExpr
 					  | '{' (exprs+=expr ';')+ '}'                                                 #exprList
-					  | LET ID ':' TYPE ( ASSIGN expr)? (',' ID ':' TYPE ( ASSIGN expr)?)* IN expr #letExpr
+					  | LET variable (',' variable)* IN exp=expr                                   #letExpr
                       | CASE exp=expr OF alts+=caseAltExpr+ ESAC                                   #caseExpr
-                      | NEW TYPE                                                                   #newExpr
+                      | NEW type=TYPE                                                              #newExpr
 					  | op=ISVOID exp=expr                                                         #isvoidExpr
 					  | left=expr op=(MULTIPLY | DIVIDE) right=expr                                #binaryExpr 
 					  | left=expr op=(PLUS | MINUS) right=expr                                     #binaryExpr
@@ -38,7 +38,7 @@ expr 			      : object=expr'.'methodName=ID'('(args+=expr (',' args+=expr)*)?')'
 					  				| GREATER_OR_EQUAL 
 					  				| GREATER_THAN) 
 					  	right=expr                                                                 #binaryExpr
-					  | '(' exp=expr ')'                                                           #unaryExpr
+					  | '(' exp=expr ')'                                                           #paramExpr
 					  | op=NOT exp=expr                                                            #unaryExpr
 					  | id=ID ASSIGN value=expr                                                    #assignExpr
 				   	  | op=MINUS exp=expr                                                          #unaryExpr

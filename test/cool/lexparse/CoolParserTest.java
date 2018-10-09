@@ -51,10 +51,22 @@ class CoolParserTest
 	@Test
 	void sandbox()
 	{
-		doParseExpr(" case xcar.print() of\n" + 
-				"                dummy : Book => outStr(\"- dynamic type was Book -\\n\");\n" + 
-				"                dummy : Article => outStr(\"- dynamic type was Article -\\n\");\n" + 
-				"            esac;\n");
+		doParse("class Main {\n" + 
+				"    i : Int;\n" + 
+				"    k : Str <- \"yummy\";\n" + 
+				"\n" + 
+				"    evolve(a: Int) : SELF_TYPE {\n" + 
+				"        (let temp : Str in\n" + 
+				"            {\n" + 
+				"\n" + 
+				"                temp <- (new BABY).concat(cell_at_next_evolution(position));\n" + 
+				"                position <- position + 1;\n" + 
+				"\n" + 
+				"            }\n" + 
+				"        ) \n" + 
+				"    };\n" + 
+				"\n" + 
+				"} ;");
  		//showTree();
 	}
 	

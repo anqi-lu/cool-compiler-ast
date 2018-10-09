@@ -119,40 +119,40 @@ public class ASTPrinter implements ASTVisitor<String>
         visitChildren(node);
         return null;
     }
-//
-//    /*
-//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.While)
-//     */
-//    @Override
-//    public String visit(While node)
-//    {
-//        treeString.append(indent() + "While (" + node.nodeClass + ")" + NL);
-//        visitChildren(node);
-//        return null;
-//    }
-//
-//    /*
-//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.ExprList)
-//     */
-//    @Override
-//    public String visit(ExprList node)
-//    {
-//        treeString.append(indent() + "Expression list (" + node.nodeClass + ")" + NL);
-//        visitChildren(node);
-//        return null;
-//    }
-//
-//    /*
-//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Let)
-//     */
-//    @Override
-//    public String visit(Let node)
-//    {
-//        treeString.append(indent() + "Let" + NL);
-//        visitChildren(node);
-//        return null;
-//    }
-//
+
+    /*
+     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.While)
+     */
+    @Override
+    public String visit(While node)
+    {
+        treeString.append(indent() + "While (" + node.nodeClass + ")" + NL);
+        visitChildren(node);
+        return null;
+    }
+
+    /*
+     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.ExprList)
+     */
+    @Override
+    public String visit(ExprList node)
+    {
+        treeString.append(indent() + "Expression list (" + node.nodeClass + ")" + NL);
+        visitChildren(node);
+        return null;
+    }
+
+    /*
+     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Let)
+     */
+    @Override
+    public String visit(Let node)
+    {
+        treeString.append(indent() + "Let" + NL);
+        visitChildren(node);
+        return null;
+    }
+
     /*
      * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Case)
      */
@@ -175,15 +175,15 @@ public class ASTPrinter implements ASTVisitor<String>
         return null;
     }
 
-//    /*
-//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.New)
-//     */
-//    @Override
-//    public String visit(New node)
-//    {
-//        treeString.append(indent() + "new " + node.type + NL);
-//        return null;
-//    }
+    /*
+     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.New)
+     */
+    @Override
+    public String visit(New node)
+    {
+        treeString.append(indent() + "new " + node.type + NL);
+        return null;
+    }
 
     /*
      * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Unary)
@@ -207,16 +207,16 @@ public class ASTPrinter implements ASTVisitor<String>
         return null;
     }
 
-//    /*
-//     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.MethodCall)
-//     */
-//    @Override
-//    public String visit(MethodCall node)
-//    {
-//        treeString.append(indent() + node.dispatch + " method call" + NL);
-//        visitChildren(node);
-//        return null;
-//    }
+    /*
+     * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.MethodCall)
+     */
+    @Override
+    public String visit(MethodCall node)
+    {
+        treeString.append(indent() + node.dispatchType + " method call" + NL);
+        visitChildren(node);
+        return null;
+    }
 
     /*
      * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Terminal)
@@ -236,16 +236,16 @@ public class ASTPrinter implements ASTVisitor<String>
         case tBool:
             sb.append("Bool (" + t.token.getText() + ")");
             break;
-        case tTypeName:
+        case tType:
             sb.append("Type (" + t.token.getText() + ")");
             break;
-        case tMethodName:
+        case tMethod:
             sb.append("Method call (" + t.token.getText());
             sb.append(t.binding == null ? "*" : " in class " 
                 + t.binding.getClassWhereDefined());
             sb.append(')');
             break;
-        case tVarName:
+        case tID:
             if (t.binding == null) {
                 sb.append("ID* (" + t.token.getText() + ")");
             } else {    // there is a binding

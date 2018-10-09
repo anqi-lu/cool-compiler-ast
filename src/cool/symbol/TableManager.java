@@ -233,7 +233,11 @@ public class TableManager
      */
     public ObjectBinding lookupIDInClass(String id, String className)
     {
-        ClassDescriptor cd = lookupClass(className).getClassDescriptor();
+    	ClassBinding cb = lookupClass(className);
+    	if (cb == null) {
+    		return null;
+    	}
+        ClassDescriptor cd = cb.getClassDescriptor();
         ObjectBinding ob = cd.getVariable(id);
         if (ob == null) {
             if (cd.inherits == null) {
@@ -254,7 +258,11 @@ public class TableManager
      */
     public MethodBinding lookupMethodInClass(String methodName, String className)
     {
-        ClassDescriptor cd = lookupClass(className).getClassDescriptor();
+    	ClassBinding cb = lookupClass(className);
+    	if (cb == null) {
+    		return null;
+    	}
+        ClassDescriptor cd = cb.getClassDescriptor();
         MethodBinding mb = cd.getMethodBinding(methodName);
         if (mb == null) {
             if(cd.inherits == null) {
