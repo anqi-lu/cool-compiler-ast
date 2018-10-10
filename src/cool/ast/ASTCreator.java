@@ -73,6 +73,7 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	@Override
 	public ASTNode visitCoolText(CoolTextContext ctx)
 	{
+		
 		System.out.println("visitCoolText");
 		final CoolText coolText = ASTNodeFactory.makeCoolText();
 		for (ClassDefContext t : ctx.classes) {
@@ -81,6 +82,8 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 			coolText.addChild(type);
 			System.out.println("classes added. visitCoolText.");
 		}
+		System.out.println("AST done for CoolText");
+		System.out.println("===========================");
 		return coolText; 
 	}
 	
@@ -236,7 +239,7 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		String className = tm.currentClassName;
 		
 		 ObjectBinding ob = tm.lookupIDInClass(id, className);
-		
+		 
 		final Assign assign = ASTNodeFactory.makeAssign(id, ob);
 
 		System.out.println("accept the expr context in assign. visitAssign.");
@@ -489,10 +492,13 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 //
 //         MethodBinding b = tm.newMethod(md, ctx.name);
 //		 Method m = ASTNodeFactory.makeMethod(b, md);
-//		
+				 
 		 MethodBinding mb = tm.lookupMethodInClass(methodName, tm.currentClassName);
 			
-		 
+		 if (mb == null) {
+			 System.out.println("mb is null");
+			
+		 }
 		 if (ctx.object != null) {
 			 call = ASTNodeFactory.makeMethodCall(methodName, DispatchType.mcObject);
 			 call.addChild(ctx.object.accept(this));
@@ -532,13 +538,15 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 				idTerm = ASTNodeFactory.makeTypeTerminal(idToken);
 			}
 			
-			ObjectBinding ob = tm.lookupIDInClass(id, className);
+			ObjectBinding ob = tm.lookupID(id, className, tm.currentTable);
 			// can only be an object not a method 
 			// MethodBinding mb = tm.lookupMethodInClass(id, className);
 			
 			if (ob == null) { // Variable
+				System.out.println("Made Terminal id = " + id + " with object binding");
 				idTerm = ASTNodeFactory.makeIDTerminal(idToken);
 			} else {
+				System.out.println("Made Terminal id = " + id + " without object binding");
 				idTerm = ASTNodeFactory.makeIDTerminal(ob);
 			}
 			

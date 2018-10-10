@@ -55,19 +55,14 @@ class CoolParserTest
 				"    i : Int;\n" + 
 				"    k : Str <- \"yummy\";\n" + 
 				"\n" + 
-				"    evolve(a: Int) : SELF_TYPE {\n" + 
-				"        (let temp : Str in\n" + 
-				"            {\n" + 
-				"\n" + 
-				"                temp <- (new BABY).concat(cell_at_next_evolution(position));\n" + 
-				"                position <- position + 1;\n" + 
-				"\n" + 
-				"            }\n" + 
-				"        ) \n" + 
+				"    init(map : Str) : SELF_TYPE {\n" + 
+				"        {\n" + 
+				"            k <- hello;\n" + 
+				"            self;\n" + 
+				"        }\n" + 
 				"    };\n" + 
-				"\n" + 
 				"} ;");
- 		//showTree();
+ 		showTree();
 	}
 	
 	@ParameterizedTest
@@ -94,7 +89,7 @@ class CoolParserTest
 	// Use the following test if you have test files in a directory.
 	@ParameterizedTest
 	@ValueSource( strings = {
-		"book_list.cl", "cells.cl", "cool.cl", "test.cl", "hello_world.cl", "complex.cl", "io.cl", "life.cl", "list.cl", "hello_01.cl"
+		"book_list.cl", "cells.cl", "cool.cl", "hello_world.cl", "complex.cl", "io.cl", "life.cl", "list.cl", "hello_01.cl"
 	})
 	void parseFile(String f) throws IOException
 	{
