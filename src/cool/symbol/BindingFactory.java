@@ -29,6 +29,7 @@ public class BindingFactory
      */
     public static ObjectBinding makeObjectBinding(String symbol, String symbolType, Token t)
     {
+    	System.out.println();
         return new ObjectBinding(symbol, symbolType, t);
     }
 

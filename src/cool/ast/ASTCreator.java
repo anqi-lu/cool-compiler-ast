@@ -12,6 +12,7 @@ import cool.ast.ASTNodeFactory.Case;
 import cool.ast.ASTNodeFactory.CaseAlt;
 import cool.ast.ASTNodeFactory.CoolText;
 import cool.ast.ASTNodeFactory.ExprList;
+import cool.ast.ASTNodeFactory.Formal;
 import cool.ast.ASTNodeFactory.If;
 import cool.ast.ASTNodeFactory.Let;
 import cool.ast.ASTNodeFactory.Method;
@@ -73,7 +74,6 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	@Override
 	public ASTNode visitCoolText(CoolTextContext ctx)
 	{
-		
 		System.out.println("visitCoolText");
 		final CoolText coolText = ASTNodeFactory.makeCoolText();
 		for (ClassDefContext t : ctx.classes) {
@@ -127,27 +127,46 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	 */
 	@Override
 	public ASTNode visitVariable(VariableContext ctx) {
-       String id = ctx.id.getText();
-       String type = ctx.type.getText();
-       ObjectBinding b = tm.newVariable(id, type, ctx.id);
-       Variable var = ASTNodeFactory.makeVariable(b);;
-       
-       if (b == null) {
-    	   System.out.println("how it the binding be nul??");
-       }
-       // add variable name and type name terminal nodes
-//		Terminal varName = ASTNodeFactory.makeIDTerminal(b);
-//		var.addChild(varName);
-		
-//		Terminal typeName = ASTNodeFactory.makeTypeTerminal(ctx.type);
-//		var.addChild(typeName);
 
-       var.token = ctx.ID().getSymbol();
+       Variable var = ASTNodeFactory.makeVariable();
+       
+       System.out.println("visiting variale. (ast)");
+
+		var.addChild(ctx.formal().accept(this));
+
        if (ctx.value != null) {
     	   System.out.println("visiting value.");
            ASTNode expr = ctx.value.accept(this);
            var.addChild(expr);
        } 
+       return var; 
+	}
+	
+	/**
+	 * Visit ClassDef node
+	 * @returns the root of the AST with 1 or more Type nodes
+	 * as children.
+	 * @see cool.lexparse.CoolBaseVisitor#visitVariable
+	 * (cool.lexparse.CoolParser.FormalContext)
+	 */
+	@Override
+	public ASTNode visitFormal(FormalContext ctx) {
+	   System.out.println("visiting FORMAL. (ast)");
+	   
+       String id = ctx.id.getText();
+       String type = ctx.type.getText();
+       ObjectBinding b = tm.newVariable(id, type, ctx.id);
+       
+       Formal var = ASTNodeFactory.makeFormal(b,tm.currentTable);;
+       
+       // add variable name and type name terminal nodes
+		Terminal varName = ASTNodeFactory.makeIDTerminal(b, tm.currentTable);
+		var.addChild(varName);
+		
+		Terminal typeName = ASTNodeFactory.makeTypeTerminal(ctx.type);
+		var.addChild(typeName);
+
+       var.token = ctx.ID().getSymbol();
        
        if (tm.currentScopeLevel() == 1) { // at the class level
     	   System.out.println("adding v car.");
@@ -169,11 +188,7 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		String type = ctx.type.getText();
 
 		MethodDescriptor md = new MethodDescriptor(name, type);
-		
-		for (FormalContext param : ctx.paramaters) {
-			md.addArgumentType(param.type.getText());
-		}
-		
+
 		MethodBinding b = tm.newMethod(md, ctx.id);
 		Method m = ASTNodeFactory.makeMethod(b, md);
 		
@@ -181,15 +196,25 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		Terminal methodName = ASTNodeFactory.makeMethodTerminal(ctx.id);
 		m.addChild(methodName);
 		
+		tm.enterScope();
+
+		for (FormalContext param : ctx.paramaters) {
+			md.addArgumentType(param.type.getText());
+			m.addChild(param.accept(this));
+		}
+		//tm.exitScope(); 
+
+		
 		ExprContext body = ctx.body;
 		if (body != null) {
-			tm.enterScope();
+			//tm.enterScope();
 			System.out.println("accept the body expr context in method. visitMethod.");
 			ASTNode child = body.accept(this);
 			m.addChild(child);
 			System.out.println("body added. visitMethod.");
-			tm.exitScope(); 
+			//tm.exitScope(); 
 		}
+		tm.exitScope();
 		return m;
 	}
 	
@@ -240,11 +265,11 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		
 		 ObjectBinding ob = tm.lookupIDInClass(id, className);
 		 
-		final Assign assign = ASTNodeFactory.makeAssign(id, ob);
+		final Assign assign = ASTNodeFactory.makeAssign(id, ob, tm.currentTable);
 
 		System.out.println("accept the expr context in assign. visitAssign.");
 		
-		Terminal idTerm = ASTNodeFactory.makeIDTerminal(ctx.id);
+		Terminal idTerm = ASTNodeFactory.makeIDTerminal(ctx.id, tm.currentTable);
 	    assign.addChild(idTerm);
 	    
 		ASTNode expr = value.accept(this);
@@ -539,15 +564,14 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 			}
 			
 			ObjectBinding ob = tm.lookupID(id, className, tm.currentTable);
-			// can only be an object not a method 
-			// MethodBinding mb = tm.lookupMethodInClass(id, className);
 			
+			// can only be an object not a method 			
 			if (ob == null) { // Variable
 				System.out.println("Made Terminal id = " + id + " with object binding");
-				idTerm = ASTNodeFactory.makeIDTerminal(idToken);
+				idTerm = ASTNodeFactory.makeIDTerminal(idToken, tm.currentTable);
 			} else {
 				System.out.println("Made Terminal id = " + id + " without object binding");
-				idTerm = ASTNodeFactory.makeIDTerminal(ob);
+				idTerm = ASTNodeFactory.makeIDTerminal(ob, tm.currentTable);
 			}
 			
 			return idTerm;

@@ -6,7 +6,7 @@ import cool.symbol.*;
 
 public abstract class ASTNode {
 	public enum ASTNodeType {
-		nCoolText, nType, nVariable, nMethod, nAssign, nIf, nWhile, nExprList, nParamExpr, nLet, nCase, nCaseAlt, nNew, nUnary, nBinary, nMethodCall, nTerminal
+		nCoolText, nType, nVariable, nFormal, nMethod, nAssign, nIf, nWhile, nExprList, nParamExpr, nLet, nCase, nCaseAlt, nNew, nUnary, nBinary, nMethodCall, nTerminal
 	}
 	
 	public ASTNodeType nodeType;

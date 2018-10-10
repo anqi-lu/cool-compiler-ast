@@ -100,7 +100,7 @@ class Cons inherits List {
 class Nil inherits List {
 	isNil() : Bool { true };
 
-        rev() : List { self };
+    rev() : List { self };
 
 	sort() : List { self };
 

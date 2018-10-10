@@ -41,7 +41,7 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 	public Void visit(CoolText node) {
 		visitChildren(node); // first visit its children then see all the errors
 
-		List<String> errors = checkBindings(); // second pass 
+		//List<String> errors = checkBindings(); // second pass 
 		if (errors.size() > 0) {
 			for (String s: errors) {
 				System.err.println("====error==== " + s);
@@ -69,28 +69,26 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 		return visitChildren(node);
 	}
 	
+	public Void visit(Variable node) {
+		return visitChildren(node);
+	}
 	/**
 	 * visit Variable node
 	 * check for object binding
 	 */
 	@Override
-	public Void visit(Variable node) {
-		String var =  node.binding.getSymbol();
+	public Void visit(Formal node) {
+		//String varName = node.getChild(0).token.getText();
 		if (node.binding == null) {
-			String error = "Variable " + var + " binding is not found." ;
+			String error = "Variable binding is not found." ;
 			errors.add(error);
-			List<String> val = new ArrayList<>(Arrays.asList(currentClass.className, error));
-			objectBindingErrors.put(var, val);
-			System.out.println(error);
 			throw new CoolException("[SymbolTableChecker] Variable not found!");
 		}
+		String var =  node.binding.getSymbol();
 		ObjectBinding ob = tm.lookupID(var, currentClass.className, node.scope);
 		if (ob == null) {
 			String error = "Variable " + var + " is not defined in the current class.";
 			errors.add(error);
-			List<String> val = new ArrayList<>(Arrays.asList(currentClass.className, error));
-			objectBindingErrors.put(var, val);
-			System.out.println(error);
 			throw new CoolException("[SymbolTableChecker] Variable not found!");
 
 		}
@@ -118,8 +116,8 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 		if (node.binding == null) {
 			String error = "Method " + node.token.getText() + " binding not found.";
 			errors.add(error);
-			List<String> val = new ArrayList<>(Arrays.asList(currentClass.className, error));
-			methodBindingErrors.put(node.token.getText(), val);
+//			List<String> val = new ArrayList<>(Arrays.asList(currentClass.className, error));
+//			methodBindingErrors.put(node.token.getText(), val);
 			throw new CoolException("[SymbolTableChecker] Method binding not found!");
 		}
 		String methodName = node.descriptor.getMethodName();
@@ -127,8 +125,8 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 		if (currentClass.getMethodDescriptor(methodName) == null) {
 			String error = "Method " + methodName + " is not defined in the current class.";
 			errors.add(error);
-			List<String> val = new ArrayList<>(Arrays.asList(currentClass.className, error));
-			methodBindingErrors.put(node.token.getText(), val);
+//			List<String> val = new ArrayList<>(Arrays.asList(currentClass.className, error));
+//			methodBindingErrors.put(node.token.getText(), val);
 			throw new CoolException("[SymbolTableChecker] Method name not defined!");
 		}
 		
@@ -136,7 +134,7 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 			String error  = "Method " + methodName + "'s return type" + 
 					node.descriptor.returnType + " is not defined.";
 			errors.add(error);
-			typeBindingErrors.put(node.descriptor.returnType, error);
+//			typeBindingErrors.put(node.descriptor.returnType, error);
 			System.out.println(error);
 		}
 		
@@ -253,8 +251,8 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 				//addError 
 				String error = "Method " + node.methodName + " binding not found.";
 				errors.add(error);
-				List<String> val = new ArrayList<>(Arrays.asList(currentClass.className, error));
-				methodBindingErrors.put(node.methodName, val);
+//				List<String> val = new ArrayList<>(Arrays.asList(currentClass.className, error));
+//				methodBindingErrors.put(node.methodName, val);
 				System.out.println(error);
 			}
 			
@@ -283,9 +281,9 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 						//addError 
 						String error = "Object " + node.token.getText() + " binding not found.";
 						errors.add(error);
-						List<String> val = new ArrayList<>(
-								Arrays.asList(currentClass.className, error));
-						objectBindingErrors.put(node.token.getText(), val);
+//						List<String> val = new ArrayList<>(
+//								Arrays.asList(currentClass.className, error));
+//						objectBindingErrors.put(node.token.getText(), val);
 						System.out.println(error);
 					}
 					
@@ -301,50 +299,50 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 		return null;
 	}
 	
-	
-	private List<String> checkBindings() {
-		// for all the bindings in symbol table, check it again
-		Map<String, String> newTypeBindingErrors = typeBindingErrors.entrySet().stream()
-			    .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-		List<String> errors = new ArrayList<>();
-		for (String type : newTypeBindingErrors.keySet()) {
-			if (tm.lookupClass(type) != null) {
-				typeBindingErrors.remove(type);
-			} else {
-				errors.add(newTypeBindingErrors.get(type));
-			}
-		}
-		
-		// object binding errors 
-		Map<String, List<String>> newObjectBindingErrors = objectBindingErrors.entrySet().stream()
-			    .collect(Collectors.toMap(e -> e.getKey(), e -> new ArrayList(e.getValue())));
-		for (String id : newObjectBindingErrors.keySet()) {
-			String className = newObjectBindingErrors.get(id).get(0);
-			if (tm.lookupIDInClass(id, className) == null) {
-				objectBindingErrors.remove(id);
-			} else {
-				errors.add(newObjectBindingErrors.get(id).get(1));
-			}
-		}
-		
-		// method binding errors
-		Map<String, List<String>> newMethodBindingErrors = methodBindingErrors.entrySet().stream()
-			    .collect(Collectors.toMap(e -> e.getKey(), e -> new ArrayList(e.getValue())));;
-		for (String id : newMethodBindingErrors.keySet()) {
-			
-			System.out.println("");
-			
-			String className = newMethodBindingErrors.get(id).get(0);
-			if (tm.lookupMethodInClass(id, className) == null) {
-				methodBindingErrors.remove(id);
-			} else {
-				errors.add(newMethodBindingErrors.get(id).get(1));
-			}
-		}
-		
-		return errors;
-	}
-	
+//	
+//	private List<String> checkBindings() {
+//		// for all the bindings in symbol table, check it again
+//		Map<String, String> newTypeBindingErrors = typeBindingErrors.entrySet().stream()
+//			    .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+//		List<String> errors = new ArrayList<>();
+//		for (String type : newTypeBindingErrors.keySet()) {
+//			if (tm.lookupClass(type) != null) {
+//				typeBindingErrors.remove(type);
+//			} else {
+//				errors.add(newTypeBindingErrors.get(type));
+//			}
+//		}
+//		
+//		// object binding errors 
+//		Map<String, List<String>> newObjectBindingErrors = objectBindingErrors.entrySet().stream()
+//			    .collect(Collectors.toMap(e -> e.getKey(), e -> new ArrayList(e.getValue())));
+//		for (String id : newObjectBindingErrors.keySet()) {
+//			String className = newObjectBindingErrors.get(id).get(0);
+//			if (tm.lookupIDInClass(id, className) == null) {
+//				objectBindingErrors.remove(id);
+//			} else {
+//				errors.add(newObjectBindingErrors.get(id).get(1));
+//			}
+//		}
+//		
+//		// method binding errors
+//		Map<String, List<String>> newMethodBindingErrors = methodBindingErrors.entrySet().stream()
+//			    .collect(Collectors.toMap(e -> e.getKey(), e -> new ArrayList(e.getValue())));;
+//		for (String id : newMethodBindingErrors.keySet()) {
+//			
+//			System.out.println("");
+//			
+//			String className = newMethodBindingErrors.get(id).get(0);
+//			if (tm.lookupMethodInClass(id, className) == null) {
+//				methodBindingErrors.remove(id);
+//			} else {
+//				errors.add(newMethodBindingErrors.get(id).get(1));
+//			}
+//		}
+//		
+//		return errors;
+//	}
+//	
 	
 }
 

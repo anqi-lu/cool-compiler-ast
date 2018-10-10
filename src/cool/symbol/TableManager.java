@@ -174,7 +174,8 @@ public class TableManager
      */
     public ObjectBinding newVariable(String varName, String varType, Token t)
     {
-        if (currentTable.elements.containsKey(varName)) {
+    	System.out.println("[TableManager] making new variable " + varName);
+    	if (currentTable.elements.containsKey(varName)) {
             throw new CoolException("Attempt to redefine variable " + varName);
         }
         ObjectBinding b = makeObjectBinding(varName, varType, t);

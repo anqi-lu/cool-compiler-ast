@@ -13,6 +13,7 @@ import cool.symbol.BindingFactory.MethodBinding;
 import cool.symbol.BindingFactory.ObjectBinding;
 import cool.symbol.ClassDescriptor;
 import cool.symbol.MethodDescriptor;
+import cool.symbol.SymbolTable;
 
 /**
  * 
@@ -23,11 +24,17 @@ public class ASTNodeFactory {
 	public static CoolText makeCoolText() {
 		return new CoolText(); 
 	}
+	
 	public static Type makeType(String className) {
 		return new Type(); 
 	}
-	public static Variable makeVariable(ObjectBinding binding) {
-		return new Variable(binding); 
+	
+	public static Variable makeVariable() {
+		return new Variable(); 
+	}
+	
+	public static Formal makeFormal(ObjectBinding binding, SymbolTable scope) {
+		return new Formal(binding, scope); 
 	}
 
 	public static Method makeMethod(MethodBinding mb, MethodDescriptor descriptor) {
@@ -42,8 +49,8 @@ public class ASTNodeFactory {
 		return new ParamExpr();
 	}
 	
-	public static Assign makeAssign(String id, ObjectBinding ob) {
-		return new Assign(id, ob);
+	public static Assign makeAssign(String id, ObjectBinding ob, SymbolTable scope) {
+		return new Assign(id, ob, scope);
 	}
 	
 	public static BinaryExpr makeBinaryExpr(Token t, BinaryOperatorType opType) {
@@ -84,28 +91,23 @@ public class ASTNodeFactory {
 	
 	// TODO(alu): Refactor so that it accepts a binding.
 	public static Terminal makeConstant(Token t, Terminal.TerminalType type) {
-		return new Terminal(t,null, type); 
+		return new Terminal(t,null, null, type); 
 	}
 
-	public static Terminal makeIDTerminal(Binding b) {
-		System.out.println("making id terminal");
-		if (b  == null) {
-			System.out.println("binding null");
-		}
-
-		return new Terminal(b.getToken(), b, TerminalType.tID);
+	public static Terminal makeIDTerminal(Binding b, SymbolTable scope) {
+		return new Terminal(b.getToken(), b, scope, TerminalType.tID);
 	}
 	
-	public static Terminal makeIDTerminal(Token t) {
-		return new Terminal(t, null, TerminalType.tID);
+	public static Terminal makeIDTerminal(Token t, SymbolTable scope) {
+		return new Terminal(t, null, scope, TerminalType.tID);
 	}
 	
 	public static Terminal makeMethodTerminal(Token t) {
-		return new Terminal(t, null, TerminalType.tMethod);
+		return new Terminal(t, null, null, TerminalType.tMethod);
 	}
 	
 	public static Terminal makeTypeTerminal(Token t) {
-		return new Terminal(t, null, TerminalType.tType);
+		return new Terminal(t, null, null, TerminalType.tType);
 	}
 	
 	/**
@@ -142,10 +144,25 @@ public class ASTNodeFactory {
 	 * Node Classes
 	 */
 	public static class Variable extends ASTNode {
-		public ObjectBinding binding;
- 		private Variable(ObjectBinding binding) {
+ 		private Variable() {
  			super();
 			nodeType = ASTNodeType.nVariable;
+ 		}
+ 		
+ 		@Override
+		public <T> T accept(ASTVisitor<? extends T> visitor) {
+			return visitor.visit(this);
+		}
+	}
+	
+	/**
+	 * Node Classes
+	 */
+	public static class Formal extends ASTNode {
+		public ObjectBinding binding;
+ 		private Formal(ObjectBinding binding, SymbolTable scope) {
+ 			super();
+			nodeType = ASTNodeType.nFormal;
 			this.binding = binding;
  		}
  		
@@ -213,10 +230,11 @@ public class ASTNodeFactory {
 		public String id;
 		public ObjectBinding ob; 
 		
-		private Assign(String id, ObjectBinding ob) {
+		private Assign(String id, ObjectBinding ob, SymbolTable scope) {
 			super();
 			this.id = id;
 			this.ob = ob;
+			//scope = scope;
 			nodeType = ASTNodeType.nAssign;
 		}
 		
@@ -404,7 +422,7 @@ public class ASTNodeFactory {
 		public TerminalType terminalType;
 		public String strValue;
 		
-		private Terminal(Token t, Binding b, Terminal.TerminalType type) {
+		private Terminal(Token t, Binding b, SymbolTable scope, Terminal.TerminalType type) {
 			super();
 			nodeType = ASTNodeType.nTerminal;
 			token = t;

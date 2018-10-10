@@ -23,6 +23,7 @@ import cool.ast.ASTNode;
 import cool.lexparse.*;
 import cool.lexparse.CoolParser.CoolTextContext;
 import cool.semantic.SymbolTableChecker;
+import cool.semantic.TypeChecker;
 
 /**
  * The implementation of the CoolRunner interface.
@@ -135,6 +136,7 @@ public class CoolRunnerImpl implements CoolRunner
 		// TODO Auto-generated method stub
 		createAST();
 		ast.accept(new SymbolTableChecker());
+		ast.accept(new TypeChecker());
 		return ast;
 		
 	}

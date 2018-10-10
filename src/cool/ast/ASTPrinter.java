@@ -79,13 +79,21 @@ public class ASTPrinter implements ASTVisitor<String>
     @Override
     public String visit(Variable v)
     {   
-        treeString.append(indent() + "Variable (" + v.binding.getSymbol()
-            + " : " + v.binding.getSymbolType() + ")" + NL);
+        treeString.append(indent() + "Variable" + NL);
         System.out.println("visiting variable (printer);");
         visitChildren(v);
         return null;
     }
 
+    @Override
+    public String visit(Formal v)
+    {   
+        treeString.append(indent() + "Formal (" + v.binding.getSymbol()
+            + " : " + v.binding.getSymbolType() + ")" + NL);
+        System.out.println("visiting formal (printer);");
+        visitChildren(v);
+        return null;
+    }
     /*
      * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Method)
      */

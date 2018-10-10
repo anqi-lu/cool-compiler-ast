@@ -17,7 +17,7 @@ classDef              : (CLASS type=TYPE (INHERITS inherits=TYPE)? '{' features=
 feature               : ((methods+=method ';') | (variables+=variable ';'))*;
 
 method                : id=ID '(' (paramaters+=formal (',' paramaters+=formal)*)? ')' ':' type=TYPE '{' body=expr '}' ;
-variable              : form=formal (ASSIGN value=expr)? ;
+variable              : formal (ASSIGN value=expr)? ;
                       
 formal                : id=ID ':' type=TYPE ;
 

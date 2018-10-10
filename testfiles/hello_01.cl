@@ -1,11 +1,17 @@
-class Main {
+class B {
+    hello() : B {
+        1
+    };
+};
+class Main inherits B {
     i : Int;
-    k : Str <- "yummy";
 
-    init(map : Str) : SELF_TYPE {
+    init(j : Str) : SELF_TYPE {
         {
-            j <- hello;
+            j <- 1 + 1;
             self;
         }
     };
+
 } ;
+

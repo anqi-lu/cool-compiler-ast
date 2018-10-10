@@ -7,6 +7,7 @@ public interface ASTVisitor<T> {
 	public default T visit(CoolText node) { return visitChildren(node); }
 	public default T visit(Type node) { return visitChildren(node); }
 	public default T visit(Variable node) { return visitChildren(node); }
+	public default T visit(Formal node) { return visitChildren(node); }
 	public default T visit(Method node) { return visitChildren(node); }
 	public default T visit(Assign node) { return visitChildren(node); }
 	public default T visit(If node) { return visitChildren(node); }
