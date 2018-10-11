@@ -234,7 +234,11 @@ public class TableManager
      */
     public ObjectBinding lookupIDInClass(String id, String className)
     {
+    	System.out.println("id being looked up is " + id + " in class " + className);
     	ClassBinding cb = lookupClass(className);
+    	if (cb == null) {
+    		throw new CoolException("The class being looked up doesn't exist.");
+    	}
         ClassDescriptor cd = cb.getClassDescriptor();
         ObjectBinding ob = cd.getVariable(id);
         if (ob == null) {

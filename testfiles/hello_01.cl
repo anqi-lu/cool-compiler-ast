@@ -1,8 +1,18 @@
-class B {
+class A {
     hello() : B {
         1
     };
 };
+
+
+class B inherits A {
+} ;
+
+
+class C inherits B {
+} ;
+
+
 class Main inherits B {
     i : Int;
 

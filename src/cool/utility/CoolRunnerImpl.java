@@ -125,6 +125,9 @@ public class CoolRunnerImpl implements CoolRunner
 		return parser;
 	}
 
+	/**
+	 * create AST
+	 */
 	public void createAST() {
 		// TODO Auto-generated method stub
 		parseTree = parse();
@@ -132,8 +135,22 @@ public class CoolRunnerImpl implements CoolRunner
 		ast = parseTree.accept(creator);
 	}
 
+	/**
+	 * Symbol Table Check 
+	 * check bindings for object, method, and class
+	 * @return symbol check AST
+	 */
+	public ASTNode symbolcheck() {
+		createAST();
+		ast.accept(new SymbolTableChecker());
+		return ast;
+	}
+	
+	/**
+	 * Type Check
+	 * @return type check AST
+	 */
 	public ASTNode typecheck() {
-		// TODO Auto-generated method stub
 		createAST();
 		ast.accept(new SymbolTableChecker());
 		ast.accept(new TypeChecker());

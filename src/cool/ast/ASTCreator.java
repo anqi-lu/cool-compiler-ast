@@ -77,10 +77,8 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		System.out.println("visitCoolText");
 		final CoolText coolText = ASTNodeFactory.makeCoolText();
 		for (ClassDefContext t : ctx.classes) {
-			System.out.println("accept this class context. visitCoolText.");
 			ASTNode type = t.accept(this);
 			coolText.addChild(type);
-			System.out.println("classes added. visitCoolText.");
 		}
 		System.out.println("AST done for CoolText");
 		System.out.println("===========================");
@@ -114,7 +112,6 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	       typeNode.addChild(m.accept(this));
 	   }
 	   tm.exitScope();
-	   System.out.println("visitClassDef");
 	   return typeNode;
     }
 	
@@ -129,13 +126,10 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	public ASTNode visitVariable(VariableContext ctx) {
 
        Variable var = ASTNodeFactory.makeVariable();
-       
-       System.out.println("visiting variale. (ast)");
 
 		var.addChild(ctx.formal().accept(this));
 
        if (ctx.value != null) {
-    	   System.out.println("visiting value.");
            ASTNode expr = ctx.value.accept(this);
            var.addChild(expr);
        } 
@@ -186,18 +180,18 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	public ASTNode visitMethod(MethodContext ctx) {
 		String name = ctx.id.getText();
 		String type = ctx.type.getText();
-
+		int numArgs = ctx.paramaters.size();
 		MethodDescriptor md = new MethodDescriptor(name, type);
 
 		MethodBinding b = tm.newMethod(md, ctx.id);
-		Method m = ASTNodeFactory.makeMethod(b, md);
+		Method m = ASTNodeFactory.makeMethod(b, md, numArgs);
 		
 		// add method name terminal
 		Terminal methodName = ASTNodeFactory.makeMethodTerminal(ctx.id);
 		m.addChild(methodName);
 		
 		tm.enterScope();
-
+		
 		for (FormalContext param : ctx.paramaters) {
 			md.addArgumentType(param.type.getText());
 			m.addChild(param.accept(this));
@@ -263,7 +257,7 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		ExprContext value = ctx.value;
 		String className = tm.currentClassName;
 		
-		 ObjectBinding ob = tm.lookupIDInClass(id, className);
+		 ObjectBinding ob = tm.lookupID(id, className, tm.currentTable);
 		 
 		final Assign assign = ASTNodeFactory.makeAssign(id, ob, tm.currentTable);
 
@@ -415,6 +409,7 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	@Override
 	public ASTNode visitCaseExpr(CaseExprContext ctx) {
 		Case c = ASTNodeFactory.makeCase();
+		c.addChild(ctx.exp.accept(this));
 		
 		for (CaseAltExprContext alt: ctx.alts) {
 			ASTNode child = alt.accept(this);
@@ -475,29 +470,42 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	 public ASTNode visitLetExpr(LetExprContext ctx) {
 		System.out.println("visit LetExpr. (ast)");
 	 	Let letExpr = ASTNodeFactory.makeLet();
-	 	tm.enterScope();
-	 	List<Variable> vars = new ArrayList<Variable>(); 
-      	for (VariableContext v : ctx.variable()) {
-	 		Variable var = enterLetSymbol(v); 
-	 		vars.add(var);
-	 	} 
-	 	letExpr.addChild(ctx.expr().accept(this)); 
-	 	tm.exitScope();
+//	 	tm.enterScope();
+//	 	List<Variable> vars = new ArrayList<Variable>(); 
+//      	for (VariableContext v : ctx.variable()) {
+//	 		Variable var = enterLetSymbol(v); 
+//	 		vars.add(var);
+//	 	} 
+//	 	letExpr.addChild(ctx.expr().accept(this)); 
+//	 	tm.exitScope();
+//	 	
+//	 	int i = 0;
+//	 	System.out.println("visit variable. ");
+//	 	for (VariableContext v : ctx.variable()) {
+//	 		Variable var = vars.get(i++); 
+//	 		if (v.expr() != null) {
+//	 			tm.enterScope();
+//	 			ASTNode expr = v.expr().accept(this);
+//	 			var.addChild(expr); 
+//	 			tm.exitScope();
+//	 		}
+//	 	}
 	 	
-	 	int i = 0;
-	 	System.out.println("visit variable. ");
-	 	for (VariableContext v : ctx.variable()) {
-	 		Variable var = vars.get(i++); 
-	 		if (v.expr() != null) {
-	 			ASTNode expr = v.expr().accept(this);
-	 			var.addChild(expr); }
+	 	tm.enterScope();
+	 	List<Variable> vars = new ArrayList<>();
+	 	for (VariableContext var : ctx.vars) {
+	 		letExpr.addChild(var.accept(this));
 	 	}
-//	 	System.out.println("exit visit LetExpr. (ast)");
+	 	
+	 	if (ctx.exp != null) {
+	 		tm.enterScope();
+	 		letExpr.addChild(ctx.exp.accept(this));
+	 		tm.exitScope();
+	 	}
+	 	
+	 	tm.exitScope();
+	 	System.out.println("exit visit LetExpr. (ast)");
 	 	return letExpr; 
-	 }
-	 
-	 private Variable enterLetSymbol(VariableContext ctx) {     
-		return (Variable) ctx.accept(this);
 	 }
 	 
 	/**

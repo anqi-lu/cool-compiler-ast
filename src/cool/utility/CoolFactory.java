@@ -14,6 +14,8 @@
 
 package cool.utility;
 
+import static cool.utility.CoolFactory.makeParserRunner;
+
 import org.antlr.v4.runtime.*;
 import cool.lexparse.*;
 
@@ -53,7 +55,7 @@ public class CoolFactory
 		runner.setParser(parser);
 		return runner;
 	}
-
+	
 	/**
 	 * Make the Lexer for the given input. Add a base error listener.
 	 * @param input the input stream

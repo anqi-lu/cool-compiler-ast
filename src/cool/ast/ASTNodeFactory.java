@@ -26,7 +26,7 @@ public class ASTNodeFactory {
 	}
 	
 	public static Type makeType(String className) {
-		return new Type(); 
+		return new Type(className); 
 	}
 	
 	public static Variable makeVariable() {
@@ -37,8 +37,9 @@ public class ASTNodeFactory {
 		return new Formal(binding, scope); 
 	}
 
-	public static Method makeMethod(MethodBinding mb, MethodDescriptor descriptor) {
-		return new Method(mb, descriptor);
+	public static Method makeMethod
+	(MethodBinding mb, MethodDescriptor descriptor, int numArgs) {
+		return new Method(mb, descriptor, numArgs);
 	}
 
 	public static ExprList makeExprList() {
@@ -129,9 +130,12 @@ public class ASTNodeFactory {
 	 */
 	public static class Type extends ASTNode {
 		public ClassBinding binding;
- 		private Type() {
+		public String className;
+		
+ 		private Type(String className) {
  			super();
 			nodeType = ASTNodeType.nType;
+			this.className = className;
  		}
  		
  		@Override
@@ -178,12 +182,14 @@ public class ASTNodeFactory {
 	public static class Method extends ASTNode {
 		public MethodBinding binding;
 		public MethodDescriptor descriptor;
+		public int numArgs;
 
-		private Method(MethodBinding mb, MethodDescriptor descriptor) {
+		private Method(MethodBinding mb, MethodDescriptor descriptor, int numArgs) {
 			super();
 			nodeType = ASTNodeType.nMethod;
 			this.binding = mb;
 			this.descriptor = descriptor;
+			this.numArgs = numArgs;
 		}
 		
 		@Override
@@ -429,7 +435,7 @@ public class ASTNodeFactory {
 			binding = b;
 			this.terminalType = type;
 		}
-		
+
  		@Override
 		public <T> T accept(ASTVisitor<? extends T> visitor) {
 			return visitor.visit(this);

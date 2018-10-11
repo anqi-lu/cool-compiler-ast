@@ -62,7 +62,7 @@ class CoolParserTest
 				"        }\n" + 
 				"    };\n" + 
 				"} ;");
- 		showTree();
+ 		//showTree();
 	}
 	
 	@ParameterizedTest
@@ -89,7 +89,17 @@ class CoolParserTest
 	// Use the following test if you have test files in a directory.
 	@ParameterizedTest
 	@ValueSource( strings = {
-		"book_list.cl", "cells.cl", "cool.cl", "hello_world.cl", "complex.cl", "io.cl", "life.cl", "list.cl", "hello_01.cl"
+		"book_list.cl", 
+		"cells.cl", 
+		"cool.cl", 
+		"hello_world.cl", 
+		"complex.cl", 
+		"io.cl", 
+		"life.cl", 
+		"list.cl", 
+		"hello_01.cl",
+		"hello_02.cl",
+		"hello_03.cl"
 	})
 	void parseFile(String f) throws IOException
 	{

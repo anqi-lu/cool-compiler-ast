@@ -65,11 +65,20 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 		}
 		
 		currentClass = cb.descriptor;
+		
+		String typeInherit = currentClass.inherits;
+		// check if the type it inherits is present
+		if (tm.lookupClass(typeInherit) == null) {
+			String e = "[the type the current class inherits is not defined]";
+			errors.add(e);
+		}
+		
 		currentTable = node.scope;
 		return visitChildren(node);
 	}
 	
 	public Void visit(Variable node) {
+		System.out.println("[SymbolTypeCheck] visiting variable node.");
 		return visitChildren(node);
 	}
 	/**
@@ -78,6 +87,7 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 	 */
 	@Override
 	public Void visit(Formal node) {
+		System.out.println("[SymbolTypeCheck] visiting formal node.");
 		//String varName = node.getChild(0).token.getText();
 		if (node.binding == null) {
 			String error = "Variable binding is not found." ;
@@ -188,6 +198,7 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 	
 	@Override 
 	public Void visit(Let node) {
+		System.out.println("[SymbolTableChecker] visiting Let node");
 		return visitChildren(node);
 	}
 	
@@ -210,10 +221,24 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 		switch (node.dispatchType) {
 		case mcObject:
 			object = node.getChild(0);
-			methodNameTerm = node.getChild(1);
+
+			methodNameTerm = node.getChild(1); // either id or (new TYPE)
+			
+			System.out.println(methodNameTerm.token.getText());
+			
 			String startClass = null; 
 			
 			if (object instanceof Terminal) {
+				System.out.println(((Terminal) object).terminalType);
+				
+				System.out.println(object.token.getText());
+				
+				if (((Terminal) object).binding instanceof MethodBinding) {
+					MethodBinding binding = (MethodBinding) ((Terminal) object).binding;
+					String x = binding.getClassDescriptor().toString();
+					System.out.println(x);
+				}
+				
 				ob = (ObjectBinding)((Terminal) object).binding;
 				if (ob == null) {
 					switch (((Terminal) object).terminalType) {
@@ -242,21 +267,26 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 					startClass = currentClass.className;
 				}
 				mb = tm.lookupMethodInClass(node.methodName, startClass);
-				((Terminal)methodNameTerm).binding = mb;
+				
+				if (methodNameTerm instanceof Terminal) {
+					((Terminal)methodNameTerm).binding = mb;
+				} else {
+					
+					System.out.println("Methodname is not a terminal");
+					throw new CoolException("Method name is not a terminal!");
+				}
 			}
 		case mcLocal:
 			methodNameTerm = node.getChild(0);
 			mb = tm.lookupMethodInClass(node.methodName, currentClass.className);
 			if (mb == null) {
-				//addError 
 				String error = "Method " + node.methodName + " binding not found.";
-				errors.add(error);
-//				List<String> val = new ArrayList<>(Arrays.asList(currentClass.className, error));
-//				methodBindingErrors.put(node.methodName, val);
-				System.out.println(error);
+				// errors.add(error);
+				// not adding because we are going to check it in type checker
 			}
-			
-			((Terminal)methodNameTerm).binding = mb;
+			if (methodNameTerm instanceof Terminal) {
+				((Terminal)methodNameTerm).binding = mb;
+			}
 			break;
 		}
 		
@@ -281,10 +311,6 @@ public class SymbolTableChecker extends ASTBaseVisitor<Void>
 						//addError 
 						String error = "Object " + node.token.getText() + " binding not found.";
 						errors.add(error);
-//						List<String> val = new ArrayList<>(
-//								Arrays.asList(currentClass.className, error));
-//						objectBindingErrors.put(node.token.getText(), val);
-						System.out.println(error);
 					}
 					
 					node.binding = ob;

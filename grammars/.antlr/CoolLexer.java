@@ -1,4 +1,4 @@
-// Generated from /Users/anqilu/Documents/WPI/Compilers/eclipse-workspace/cool-compiler/grammars/Cool.g4 by ANTLR 4.7.1
+// Generated from /Users/anqilu/WPI/Compilers/ew2/COOL Compiler/grammars/Cool.g4 by ANTLR 4.7.1
 
 package cool.lexparse;
 
