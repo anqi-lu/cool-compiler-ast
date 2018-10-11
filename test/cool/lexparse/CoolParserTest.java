@@ -51,18 +51,16 @@ class CoolParserTest
 	@Test
 	void sandbox()
 	{
-		doParse("class Main {\n" + 
-				"    i : Int;\n" + 
-				"    k : Str <- \"yummy\";\n" + 
-				"\n" + 
-				"    init(map : Str) : SELF_TYPE {\n" + 
-				"        {\n" + 
-				"            k <- hello;\n" + 
-				"            self;\n" + 
-				"        }\n" + 
+		doParse("class Main inherits IO {\n" + 
+				"    main() : SELF_TYPE {\n" + 
+				"	{\n" + 
+				"	    outStr((new Object).typeName().substr(4,1)).\n" + 
+				"	    outStr((isvoid self).typeName().substr(1,3));\n" + 
+				"	    outStr(\"\\n\");\n" + 
+				"	}\n" + 
 				"    };\n" + 
-				"} ;");
- 		//showTree();
+				"};\n");
+// 		showTree();
 	}
 	
 	@ParameterizedTest
@@ -97,6 +95,7 @@ class CoolParserTest
 		"io.cl", 
 		"life.cl", 
 		"list.cl", 
+		"current.cl",
 		"hello_01.cl",
 		"hello_02.cl",
 		"hello_03.cl"

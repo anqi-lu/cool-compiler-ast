@@ -52,7 +52,6 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	private static final String TYPE_STR = "Str";
 	private static final String TYPE_BOOL = "Bool";
 	private static final String TYPE_SELF = "SELF_TYPE"; 
-	private static final String TYPE_SELF_C = "SELF_TYPE_C"; 
 	
 	public TypeChecker() {
 		tm = TableManager.getInstance();
@@ -85,7 +84,6 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override
 	public String visit(Type node) {
-		System.out.println("getting type of type node");
 		currentClass = tm.lookupClass(node.className);
 		return visitChildren(node);
 	}
@@ -100,23 +98,29 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override
 	public String visit(Variable node) {
-		
+		System.out.println("[TypeChecker] visiting variable (type checker)");
 		List<String> types = getChildrenTypes(node);
 		String varType = types.get(0);
-		if (types.size() == 2) { // if there is an expr
+		
+		if (types.size() == 2) { // if there is an assignment
 			String exprType = types.get(1);
 			
-			System.out.println(exprType);
+			String z = "ExprType: " + exprType +
+					" and VarType: " + varType 
+					+ " in variable assignment.";
+			
+			System.out.println(z);
 			if (!conformsTo(exprType, varType, currentClass.getClassDescriptor().className)) {
-				String e = "ExprType doesn't conform to VarType in variable init assignment.";
+				String e = "ExprType: " + exprType +
+						" doesn't conform to VarType: " + varType 
+						+ " in variable init assignment.";
 				errors.add(e);
-				throw new CoolException(e);
+				// throw new CoolException(e);
 			}
 			
-			System.out.println("getting type of variable node: " + exprType);
+			System.out.println("[TypeChecker] variable is type: " + exprType);
 			return exprType;
 		} 
-		System.out.println("getting type of variable node: " + varType);
 		return varType;
 	}
 
@@ -128,16 +132,19 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override
 	public String visit(Formal node) {
-		
+		visitChildren(node);
 		String idType = node.binding.symbolType;
 		String typeName = getChildTypeByIndex(node, 1);
+		
+		idType = this.checkForSelfType(idType);
+		typeName = this.checkForSelfType(typeName);
 		
 		if (!idType.equals(typeName)) {
 			String e = "Variable id had been defined for another type.";
 			errors.add(e);
 			throw new CoolException(e);
 		}
-		System.out.println("getting type of formal node: " + typeName);
+	
 		return typeName;
 	}
 
@@ -147,15 +154,21 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override
 	public String visit(Method node) {
+		System.out.println("[Typechecker] visiting Method");
 		String returnType = node.descriptor.returnType;
+		
+		returnType = this.checkForSelfType(returnType);
+		
 		
 		System.out.println("[debug] defining method: " +
 				node.descriptor.methodName
 				+ " whose in class "
-				+ currentClass.getClassDescriptor().className);
+				+ currentClass.getClassDescriptor().className
+				+ " and its type is " + returnType);
 		
-	
-		System.out.println("getting type of method node: " + returnType);
+		
+		visitChildren(node);
+		
 		return returnType;
 	}
 	
@@ -166,6 +179,8 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(ExprList node) {
+		System.out.println("[Typechecker] visiting ExprList");
+		visitChildren(node);
 		return getChildTypeByIndex(node, node.children.size() - 1);
 	}
 	
@@ -176,8 +191,13 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(ParamExpr node) {
+		System.out.println("[TypeChecker] visting paranexpr. (tpechecker)");
 		ASTNode unwrappedNode = unwrapParans(node);
-		return visitChildren(unwrappedNode);
+		
+		String res = node.getChild(0).accept(this);
+		System.out.println("[TypeChecker] visting paranexpr: " + res);
+
+		return res;
 	}
 	
 	/*
@@ -188,12 +208,22 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(Assign node) {
-		List<String> types = getChildrenTypes(node);
+		System.out.println("[Typechecker] visiting Assign");
+		Boolean res = conformsTo("Str", "Int", null);
+		System.out.println("Str and Int conforms to " + res.toString());
+		
+		
 		String varType = getChildTypeByIndex(node, 0);
 		String exprType = getChildTypeByIndex(node, 1);
+		
+//		exprType = this.checkForSelfType(exprType);
+		
+		System.out.println("[TypeChecker Assign] exprType is: " + exprType);
 
 		if (!conformsTo(exprType, varType, currentClass.getClassDescriptor().className)) { //TODO
-			String e = "ExprType doesn't conform to VarType in an assignment.";
+			String e = "ExprType: " + exprType +
+					" doesn't conform to VarType: " + varType 
+					+ " in variable init assignment.";
 			errors.add(e);
 			throw new CoolException(e);
 		}
@@ -242,8 +272,10 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			String typeLeft = types.get(0);
 			String typeRight = types.get(1);
 
-			if (typeLeft != typeRight) {
-				String e = "[TypeCheck BinaryExpr] Exprs for binary expression not matching.";
+			if (!typeLeft.equals(typeRight)) {
+				String e = "[TypeCheck BinaryExpr] Exprs for binary expression not matching."
+						+ " typeleft: " + typeLeft
+						+ " typeRight: " + typeRight;
 				errors.add(e);
 				throw new CoolException(e);
 			}
@@ -274,6 +306,7 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			break;
 		case NEG:
 			expectType = TYPE_INT;
+			returnType = TYPE_INT;
 			break;
 		case ISVOID: // can be any type
 			break;
@@ -309,6 +342,8 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			errors.add(e);
 			throw new CoolException(e);
 		}
+		
+		System.out.println("[typecheck if] the thenType is: " + typeThen + "the elseType is: " + typeElse);
 		return leastUpperBound(typeThen, typeElse);
 	}
 	
@@ -376,70 +411,78 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(New node) {
-		if (node.type.equals(TYPE_SELF)) {
-			System.out.println("getting type of New node: " + TYPE_SELF_C);
-			return TYPE_SELF_C;
-		}
+		System.out.println("[TypeChecker] visiting new (type checker)");
 		
 		System.out.println("getting type of New node: " + node.type);
-		return node.type;
+		return node.getChild(0).accept(this);
 	}
 	
 	@Override
 	public String visit(MethodCall node) {
+		System.out.println("[TypeChecker] visiting method call (type checker) " 
+				+ node.methodName);
+		MethodBinding mb = null;
+		MethodDescriptor md = null;
+		String returnType = null;
 
-		MethodBinding mb = 
-				tm.lookupMethodInClass(node.methodName, 
-						currentClass.getClassDescriptor().className);
-		MethodDescriptor md = mb.getMethodDescriptor();	
-		String returnType = md.getReturnType();
-		
-		System.out.println("[debug] calling method: " +
-				mb.getMethodDescriptor().methodName
-				+ " whose in class "
-				+ currentClass.getClassDescriptor().className);
-		
 		switch(node.dispatchType) {
 		case mcObject:
+			String objectType = node.getChild(0).accept(this);
+
+			//TODO
+			if (objectType.equals(TYPE_SELF)) {
+				objectType = currentClass.getClassDescriptor().className;
+			}
+			
+			Terminal nameNode = (Terminal) node.getChild(1);
+			String name = nameNode.token.getText();
+			
+			
+			mb = tm.lookupMethodInClass(name, currentClass.getClassDescriptor().className);
+			if (mb == null) {
+				mb = tm.lookupMethodInClass(name, objectType);
+			}
+			
+			
+			md = mb.getMethodDescriptor();
+			
+			returnType = md.getReturnType();
+			returnType = this.checkForSelfType(returnType);
+
 			// check argument size
 			if (node.children.size() - 2 != md.argumentTypes.size()) {
 				String e = "[TypeChecker MethodCall] argument number not matching";
 				errors.add(e);
-				// throw new CoolException(e);
+				throw new CoolException(e);
 			}
 			// check argument types 
 			int i = 2;
 			for (String paramType : md.argumentTypes) {
 				String argType = node.getChild(i++).accept(this);
-				if (!conformsTo(argType, paramType, currentClass.getClassDescriptor().className)) {
+				if (!conformsTo(argType, paramType, 
+						currentClass.getClassDescriptor().className)) {
 					String e = "[TypeChecker MethodCall] argument type not matching.";
 					errors.add(e);
-					// throw new CoolException(e);
+					throw new CoolException(e);
 				}
-			}
-			
-			ASTNode objNode = node.getChild(0);
-			String callObjType = null;
-			
-			// since newExpr (new TYPE) is wrapped in a ParamExpr, get into another layer
-			if (objNode instanceof ParamExpr) {
-				objNode = unwrapParans(objNode);
-			}
-			
-			if (objNode instanceof New) { // new expr
-				callObjType = ((New) objNode).type;
-			} else { // id
-				Binding b = (ObjectBinding) ((Terminal) objNode).binding;
-				callObjType = b.getSymbolType();
-			}
-			
-			if (returnType.equals(TYPE_SELF)) {
-				System.out.println("getting type of methodcall node: " + callObjType);
-				return callObjType;
 			}
 			break;
 		case mcLocal:
-			// check argument size
+			mb = 
+			tm.lookupMethodInClass(node.methodName, 
+					currentClass.getClassDescriptor().className);
+	
+			if (mb == null) {
+				System.out.println("method binding not found");
+				String e = "[TypeChecker] Method Binding not found.";
+				errors.add(e);
+				throw new CoolException(e);	
+			}
+			
+			md = mb.getMethodDescriptor();	
+			returnType = md.getReturnType();
+		
+					// check argument size
 			if (node.children.size() - 1 != md.argumentTypes.size()) {
 				String e = "[TypeChecker MethodCall] argument number not matching";
 				errors.add(e);
@@ -452,16 +495,16 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 				if (!conformsTo(argType, paramType, currentClass.getClassDescriptor().className)) {
 					String e = "[TypeChecker MethodCall] argument type not matching.";
 					errors.add(e);
-					// throw new CoolException(e);
+					throw new CoolException(e);
 				}
 			}
 			
-			if (returnType.equals(TYPE_SELF)) {
-				return currentClass.getClassDescriptor().className;
-			}
+			System.out.println("in methodcall local and the current class is: " + currentClass.getClassDescriptor().className + "======");
+		
+			returnType = this.checkForSelfType(returnType);
+			System.out.println("in methodcall local " + md.methodName + " and the return type is: " + returnType + "======");
 			break;
 		}
-		System.out.println("getting type of methodcall node: " + returnType);
 		return returnType;
 	}
 	
@@ -487,6 +530,7 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			break;
 		case tType:
 			type = node.token.getText();
+			type = this.checkForSelfType(type);
 			break;
 		default:
 			break;
@@ -495,6 +539,30 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 		System.out.println("getting type of terminal node: " + type);
 		return type;
 	}
+	
+	@Override
+	public String visitChildren(ASTNode node) {
+		System.out.println("visting children.(AST V)");
+		for (ASTNode child : node.children) {
+			System.out.println("visting child.(AST V)");
+			child.accept(this);
+		}
+		return null;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	// Helper Methods 
 	/**
@@ -517,8 +585,8 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 * @return least upper bound of the two types 
 	 */
 	public String leastUpperBound(String type1, String type2) {
-		System.out.println(type1);
-		System.out.println(type2);
+//		System.out.println(type1);
+//		System.out.println(type2);
 		// go through inherits for both 
 		if (type1.equals(type2)) {
 			return type1;
@@ -536,9 +604,15 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 * @return list of the input's ancestors
 	 */
 	public List<String> findAllAncestors(String type) {
+		
+		System.out.println("The type to find all Ancestors is: " + type + "=====");
+		type = this.checkForSelfType(type);
+		
+		// TODO: shouldn't be doing this here!!
 		if (tm.lookupClass(type) == null) {
 			throw new CoolException("Type Error!");
 		}
+//		
 		ClassDescriptor cd = tm.lookupClass(type).getClassDescriptor();
 
 		List<String> ancestors = new ArrayList<>();
@@ -624,10 +698,10 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 		}
 		
 		// type 2 will be one of type1's ancestors
-		if (!type2.equals(TYPE_SELF_C) && !type1.equals(TYPE_SELF_C)) {
+		if (!type2.equals(TYPE_SELF) && !type1.equals(TYPE_SELF)) {
 			// T <= T'
 			return leastUpperBound(type1, type2).equals(type2);
-		} else if (type1.equals(TYPE_SELF_C) && !type2.equals(TYPE_SELF_C)){
+		} else if (type1.equals(TYPE_SELF) && !type2.equals(TYPE_SELF)){
 			// SELF_TYPEc <= T if C <= T
 			return conformsTo(currentClassName, type2, null);
 		} else {
@@ -652,5 +726,18 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 		}
 		
 		return resNode;
+	}
+	
+	private String checkForSelfType(String type) {
+		String resType = type;
+		if (type.equals(TYPE_SELF)) {
+			System.out.println("aaasdaff gdf");
+			resType = "SELF_" + currentClass.getClassDescriptor().className;
+		} else if (type.length() > 4 && type.substring(0, 4).equals("SELF")) {
+			String[] types = type.split("_");
+			resType = types[1];
+		}
+		
+		return resType; 
 	}
 }

@@ -26,7 +26,7 @@ expr 			      : object=expr'.'methodName=ID'('(args+=expr (',' args+=expr)*)?')'
                       | IF cond=expr THEN thenExpr=expr ELSE elseExpr=expr FI                      #ifExpr
                       | WHILE cond=expr LOOP exp=expr POOL                                         #whileExpr
 					  | '{' (exprs+=expr ';')+ '}'                                                 #exprList
-					  | LET vars+=variable (',' vars+=variable)* IN exp=expr                                   #letExpr
+					  | LET vars+=variable (',' vars+=variable)* IN exp=expr                       #letExpr
                       | CASE exp=expr OF alts+=caseAltExpr+ ESAC                                   #caseExpr
                       | NEW type=TYPE                                                              #newExpr
 					  | op=ISVOID exp=expr                                                         #isvoidExpr

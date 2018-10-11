@@ -1,3 +1,4 @@
+(* wrong assignment type *) 
 class B {};
 
 class Main {
@@ -5,7 +6,7 @@ class Main {
 
     init(j : Str) : SELF_TYPE {
         {
-            j <- "str";
+            j <- 1 + 1;
             self;
         }
     };

@@ -145,12 +145,20 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	 */
 	@Override
 	public ASTNode visitFormal(FormalContext ctx) {
-	   System.out.println("visiting FORMAL. (ast)");
+	   
 	   
        String id = ctx.id.getText();
        String type = ctx.type.getText();
-       ObjectBinding b = tm.newVariable(id, type, ctx.id);
        
+       
+       
+       if (type.equals("SELF_TYPE")) {
+    	   System.out.println("visiting FORMAL." + id + " (ast) adn the type is SELF_TYPE ");
+    	   type = "SELF_" + tm.currentClassName;
+       }
+       
+       ObjectBinding b = tm.newVariable(id, type, ctx.id);
+
        Formal var = ASTNodeFactory.makeFormal(b,tm.currentTable);;
        
        // add variable name and type name terminal nodes
@@ -181,6 +189,11 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		String name = ctx.id.getText();
 		String type = ctx.type.getText();
 		int numArgs = ctx.paramaters.size();
+		
+		if (type.equals("SELF_TYPE")) {
+			type = "SELF_" + tm.currentClassName;
+		}
+		
 		MethodDescriptor md = new MethodDescriptor(name, type);
 
 		MethodBinding b = tm.newMethod(md, ctx.id);
@@ -202,10 +215,8 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		ExprContext body = ctx.body;
 		if (body != null) {
 			//tm.enterScope();
-			System.out.println("accept the body expr context in method. visitMethod.");
 			ASTNode child = body.accept(this);
 			m.addChild(child);
-			System.out.println("body added. visitMethod.");
 			//tm.exitScope(); 
 		}
 		tm.exitScope();
@@ -257,19 +268,15 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		ExprContext value = ctx.value;
 		String className = tm.currentClassName;
 		
-		 ObjectBinding ob = tm.lookupID(id, className, tm.currentTable);
+		ObjectBinding ob = tm.lookupID(id, className, tm.currentTable);
 		 
 		final Assign assign = ASTNodeFactory.makeAssign(id, ob, tm.currentTable);
 
-		System.out.println("accept the expr context in assign. visitAssign.");
-		
 		Terminal idTerm = ASTNodeFactory.makeIDTerminal(ctx.id, tm.currentTable);
 	    assign.addChild(idTerm);
 	    
 		ASTNode expr = value.accept(this);
-		assign.addChild(expr);
-		System.out.println("expr added. visitAssign.");
-			
+		assign.addChild(expr);			
 		return assign; 
 	}
 	
@@ -369,7 +376,6 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	@Override
 	public ASTNode visitIfExpr(IfExprContext ctx) {
 		If expr = ASTNodeFactory.makeIf();
-		// expr.token = ctx.start; // ?
 		expr.addChild(ctx.cond.accept(this)); 
 		expr.addChild(ctx.thenExpr.accept(this)); 
 		expr.addChild(ctx.elseExpr.accept(this)); 
@@ -395,7 +401,6 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		}
 		expr.addChild(ctx.cond.accept(this));
 		expr.addChild(ctx.exp.accept(this));
-		System.out.println("exit visit while. (ast)");
 		return expr;
 	}
 	
@@ -452,6 +457,10 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		String type = ctx.type.getText();
 		New n = ASTNodeFactory.makeNew(type);
 		
+		if (type.equals("SELF_TYPE")) {
+			type = "SELF_" + tm.currentClassName;
+		}
+		
 		// add terminal type
 		Terminal typeName = ASTNodeFactory.makeTypeTerminal(ctx.type);
 		n.addChild(typeName);
@@ -468,29 +477,8 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	 */
 	 @Override
 	 public ASTNode visitLetExpr(LetExprContext ctx) {
-		System.out.println("visit LetExpr. (ast)");
 	 	Let letExpr = ASTNodeFactory.makeLet();
-//	 	tm.enterScope();
-//	 	List<Variable> vars = new ArrayList<Variable>(); 
-//      	for (VariableContext v : ctx.variable()) {
-//	 		Variable var = enterLetSymbol(v); 
-//	 		vars.add(var);
-//	 	} 
-//	 	letExpr.addChild(ctx.expr().accept(this)); 
-//	 	tm.exitScope();
-//	 	
-//	 	int i = 0;
-//	 	System.out.println("visit variable. ");
-//	 	for (VariableContext v : ctx.variable()) {
-//	 		Variable var = vars.get(i++); 
-//	 		if (v.expr() != null) {
-//	 			tm.enterScope();
-//	 			ASTNode expr = v.expr().accept(this);
-//	 			var.addChild(expr); 
-//	 			tm.exitScope();
-//	 		}
-//	 	}
-	 	
+
 	 	tm.enterScope();
 	 	List<Variable> vars = new ArrayList<>();
 	 	for (VariableContext var : ctx.vars) {
@@ -504,7 +492,6 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	 	}
 	 	
 	 	tm.exitScope();
-	 	System.out.println("exit visit LetExpr. (ast)");
 	 	return letExpr; 
 	 }
 	 
@@ -520,7 +507,6 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		 
 		 MethodCall call;
 		 String methodName = ctx.methodName.getText();
-		 System.out.println("visit methodcall: " + methodName);
 //		 MethodDescriptor md = new MethodDescriptor(methodName, type);
 //
 //         MethodBinding b = tm.newMethod(md, ctx.name);
@@ -566,7 +552,6 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 			String id = idToken.getText();
 			String className = tm.currentClassName;
 			
-			System.out.println("visiting terminal. id = " + id + " in class " + className);
 			if (Character.isUpperCase(id.charAt(0))) { // Type
 				idTerm = ASTNodeFactory.makeTypeTerminal(idToken);
 			}
@@ -584,7 +569,6 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 			
 			return idTerm;
 		} else if (ctx.term().intTerm != null) {
-			System.out.println("visiting terminal int. (ast)");
 			return ASTNodeFactory.makeConstant(ctx.term().intTerm, Terminal.TerminalType.tInt);
 		} else if (ctx.term().strTerm != null) {
 			return ASTNodeFactory.makeConstant(ctx.term().strTerm, Terminal.TerminalType.tStr);

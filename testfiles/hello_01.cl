@@ -18,7 +18,7 @@ class Main inherits B {
 
     init(j : Str) : SELF_TYPE {
         {
-            j <- 1 + 1;
+            j <- "hello";
             self;
         }
     };

@@ -211,6 +211,8 @@ public class TableManager
      */
     public ObjectBinding lookupID(String id, String className, SymbolTable table)
     {
+    	System.out.println("id being looked up is " + id + " in class " + className 
+    			+ " in table: " + table.tableNumber);
         Binding result = null;
         result = table.lookup(id);
         if (result == null) {   // See if it's in the class hierarchy
@@ -260,6 +262,8 @@ public class TableManager
      */
     public MethodBinding lookupMethodInClass(String methodName, String className)
     {
+    	System.out.println("looking for method: " + methodName
+    			+ " in className: " + className);
     	ClassBinding cb = lookupClass(className);
         ClassDescriptor cd = cb.getClassDescriptor();
         MethodBinding mb = cd.getMethodBinding(methodName);

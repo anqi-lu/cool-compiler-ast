@@ -519,7 +519,7 @@ public class CoolParser extends Parser {
 	}
 	public static class LetExprContext extends ExprContext {
 		public VariableContext variable;
-		public List<VariableContext> var = new ArrayList<VariableContext>();
+		public List<VariableContext> vars = new ArrayList<VariableContext>();
 		public ExprContext exp;
 		public TerminalNode LET() { return getToken(CoolParser.LET, 0); }
 		public TerminalNode IN() { return getToken(CoolParser.IN, 0); }
@@ -780,7 +780,7 @@ public class CoolParser extends Parser {
 				match(LET);
 				setState(114);
 				((LetExprContext)_localctx).variable = variable();
-				((LetExprContext)_localctx).var.add(((LetExprContext)_localctx).variable);
+				((LetExprContext)_localctx).vars.add(((LetExprContext)_localctx).variable);
 				setState(119);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
@@ -791,7 +791,7 @@ public class CoolParser extends Parser {
 					match(COMMA);
 					setState(116);
 					((LetExprContext)_localctx).variable = variable();
-					((LetExprContext)_localctx).var.add(((LetExprContext)_localctx).variable);
+					((LetExprContext)_localctx).vars.add(((LetExprContext)_localctx).variable);
 					}
 					}
 					setState(121);
