@@ -51,7 +51,6 @@ import cool.symbol.BindingFactory.MethodBinding;
 import cool.symbol.BindingFactory.ObjectBinding;
 import cool.symbol.MethodDescriptor;
 import cool.symbol.TableManager;
-import cool.utility.CoolException;
 
 public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	private TableManager tm;
@@ -74,14 +73,12 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	@Override
 	public ASTNode visitCoolText(CoolTextContext ctx)
 	{
-		System.out.println("visitCoolText");
 		final CoolText coolText = ASTNodeFactory.makeCoolText();
+		
 		for (ClassDefContext t : ctx.classes) {
 			ASTNode type = t.accept(this);
 			coolText.addChild(type);
 		}
-		System.out.println("AST done for CoolText");
-		System.out.println("===========================");
 		return coolText; 
 	}
 	
@@ -95,7 +92,6 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	@Override
     public ASTNode visitClassDef(ClassDefContext ctx)
     {
-		
 	   final String className = ctx.type.getText();
 	   currentClass = tm.StartNewClass(className,
 			   ctx.inherits == null ? null : ctx.inherits.getText());
@@ -103,6 +99,7 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	   currentClass.token = ctx.type;
 	   typeNode.binding = currentClass;
 	   FeatureContext features = ctx.features;
+	   
 	   // visit variables first
 	   for (VariableContext v : features.variables) {
 	       typeNode.addChild(v.accept(this));
@@ -124,15 +121,15 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	 */
 	@Override
 	public ASTNode visitVariable(VariableContext ctx) {
-
        Variable var = ASTNodeFactory.makeVariable();
-
-		var.addChild(ctx.formal().accept(this));
+       
+       var.addChild(ctx.formal().accept(this));
 
        if (ctx.value != null) {
            ASTNode expr = ctx.value.accept(this);
            var.addChild(expr);
        } 
+       
        return var; 
 	}
 	
@@ -145,36 +142,23 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	 */
 	@Override
 	public ASTNode visitFormal(FormalContext ctx) {
-	   
-	   
-       String id = ctx.id.getText();
-       String type = ctx.type.getText();
-       
-       
-       
-       if (type.equals("SELF_TYPE")) {
-    	   System.out.println("visiting FORMAL." + id + " (ast) adn the type is SELF_TYPE ");
-    	   type = "SELF_" + tm.currentClassName;
-       }
-       
-       ObjectBinding b = tm.newVariable(id, type, ctx.id);
-
-       Formal var = ASTNodeFactory.makeFormal(b,tm.currentTable);;
-       
-       // add variable name and type name terminal nodes
+		String id = ctx.id.getText();
+		String type = checkForSelfType(ctx.type.getText());
+		ObjectBinding b = tm.newVariable(id, type, ctx.id);
+		
+		Formal var = ASTNodeFactory.makeFormal(b,tm.currentTable);;
+		
 		Terminal varName = ASTNodeFactory.makeIDTerminal(b, tm.currentTable);
 		var.addChild(varName);
 		
 		Terminal typeName = ASTNodeFactory.makeTypeTerminal(ctx.type);
 		var.addChild(typeName);
-
-       var.token = ctx.ID().getSymbol();
-       
-       if (tm.currentScopeLevel() == 1) { // at the class level
-    	   System.out.println("adding v car.");
-    	   currentClass.descriptor.addVariable(b);
-       }
-       return var; 
+		
+		var.token = ctx.ID().getSymbol();
+		if (tm.currentScopeLevel() == 1) { // at the class level
+			currentClass.descriptor.addVariable(b);
+		}
+		return var; 
 	}
 	
 	/**
@@ -187,19 +171,13 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	@Override
 	public ASTNode visitMethod(MethodContext ctx) {
 		String name = ctx.id.getText();
-		String type = ctx.type.getText();
+		String type = checkForSelfType(ctx.type.getText());
 		int numArgs = ctx.paramaters.size();
 		
-		if (type.equals("SELF_TYPE")) {
-			type = "SELF_" + tm.currentClassName;
-		}
-		
 		MethodDescriptor md = new MethodDescriptor(name, type);
-
 		MethodBinding b = tm.newMethod(md, ctx.id);
 		Method m = ASTNodeFactory.makeMethod(b, md, numArgs);
 		
-		// add method name terminal
 		Terminal methodName = ASTNodeFactory.makeMethodTerminal(ctx.id);
 		m.addChild(methodName);
 		
@@ -209,15 +187,11 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 			md.addArgumentType(param.type.getText());
 			m.addChild(param.accept(this));
 		}
-		//tm.exitScope(); 
-
 		
 		ExprContext body = ctx.body;
 		if (body != null) {
-			//tm.enterScope();
 			ASTNode child = body.accept(this);
 			m.addChild(child);
-			//tm.exitScope(); 
 		}
 		tm.exitScope();
 		return m;
@@ -323,7 +297,7 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 				opType = BinaryOperatorType.GREATER_THAN;
 				break;
 			default:
-				opType = null; // throw exception
+				opType = null;
 				break;
 		}
 				
@@ -391,14 +365,8 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	 */
 	@Override
 	public ASTNode visitWhileExpr(WhileExprContext ctx) {
-		System.out.println("visit while. (ast)");
 		While expr = ASTNodeFactory.makeWhile();
-		if (ctx.cond.accept(this) == null) {
-			System.out.println("while ctx cond is null");
-		}
-		if (ctx.exp.accept(this) == null) {
-			System.out.println("while ctx exp is null");
-		}
+
 		expr.addChild(ctx.cond.accept(this));
 		expr.addChild(ctx.exp.accept(this));
 		return expr;
@@ -437,7 +405,6 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	    tm.enterScope();
 	    ObjectBinding b = tm.newVariable(id, type, ctx.id);
 	    
-	    
 		CaseAlt c = ASTNodeFactory.makeCaseAlt(b);
         ASTNode expr = ctx.exp.accept(this);
         c.addChild(expr);
@@ -457,9 +424,7 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		String type = ctx.type.getText();
 		New n = ASTNodeFactory.makeNew(type);
 		
-		if (type.equals("SELF_TYPE")) {
-			type = "SELF_" + tm.currentClassName;
-		}
+		type = checkForSelfType(type);
 		
 		// add terminal type
 		Terminal typeName = ASTNodeFactory.makeTypeTerminal(ctx.type);
@@ -484,12 +449,10 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 	 	for (VariableContext var : ctx.vars) {
 	 		letExpr.addChild(var.accept(this));
 	 	}
-	 	
-	 	if (ctx.exp != null) {
-	 		tm.enterScope();
-	 		letExpr.addChild(ctx.exp.accept(this));
-	 		tm.exitScope();
-	 	}
+
+ 		tm.enterScope();
+ 		letExpr.addChild(ctx.exp.accept(this));
+ 		tm.exitScope();
 	 	
 	 	tm.exitScope();
 	 	return letExpr; 
@@ -507,17 +470,8 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		 
 		 MethodCall call;
 		 String methodName = ctx.methodName.getText();
-//		 MethodDescriptor md = new MethodDescriptor(methodName, type);
-//
-//         MethodBinding b = tm.newMethod(md, ctx.name);
-//		 Method m = ASTNodeFactory.makeMethod(b, md);
-				 
 		 MethodBinding mb = tm.lookupMethodInClass(methodName, tm.currentClassName);
-			
-		 if (mb == null) {
-			 System.out.println("mb is null");
-			
-		 }
+
 		 if (ctx.object != null) {
 			 call = ASTNodeFactory.makeMethodCall(methodName, DispatchType.mcObject);
 			 call.addChild(ctx.object.accept(this));
@@ -527,11 +481,11 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		 }
 		 
 		 Terminal idTerm = ASTNodeFactory.makeMethodTerminal(ctx.methodName);
-		call.addChild(idTerm);
+		 call.addChild(idTerm);
 		
-		for (ExprContext arg : ctx.args) {
+		 for (ExprContext arg : ctx.args) {
 			call.addChild(arg.accept(this));
-		}
+		 }
 			
 		 return call;
 	 }
@@ -559,11 +513,9 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 			ObjectBinding ob = tm.lookupID(id, className, tm.currentTable);
 			
 			// can only be an object not a method 			
-			if (ob == null) { // Variable
-				System.out.println("Made Terminal id = " + id + " with object binding");
+			if (ob == null) {
 				idTerm = ASTNodeFactory.makeIDTerminal(idToken, tm.currentTable);
 			} else {
-				System.out.println("Made Terminal id = " + id + " without object binding");
 				idTerm = ASTNodeFactory.makeIDTerminal(ob, tm.currentTable);
 			}
 			
@@ -578,5 +530,18 @@ public class ASTCreator extends CoolBaseVisitor<ASTNode>{
 		return null;
 	}
 	
-
+	// Helper Method
+	/**
+	 * Check for SELF_TYPE 
+	 * replace SELF_TYPE with SELF_TYPEc
+	 * @param type
+	 * @return type
+	 */
+	private String checkForSelfType(String type) {
+		if (type.equals("SELF_TYPE")) {
+	    	   type = "SELF_" + tm.currentClassName;
+	    }
+		return type;
+	}
+	
 }

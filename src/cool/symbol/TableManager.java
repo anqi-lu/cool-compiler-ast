@@ -142,6 +142,7 @@ public class TableManager
         currentClassName = className;
         currentClassBinding = binding;
         tables.add(currentTable);
+                
         return binding;
     }
     
@@ -190,6 +191,7 @@ public class TableManager
     {
         currentTable = new SymbolTable(currentTable);
         tables.add(currentTable);
+        
     }
     
     /**
@@ -303,6 +305,16 @@ public class TableManager
     public List<SymbolTable> getTables()
     {
         return tables;
+    }
+    
+    /**
+     * Get the list of tables that have been defined. This is typically used
+     * for validating that the tables are correct and consistent.
+     * @return the list of tables
+     */
+    public SymbolTable getTableByIndex(int i)
+    {
+        return tables.get(i);
     }
     
     /*

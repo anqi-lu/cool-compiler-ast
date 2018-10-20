@@ -20,6 +20,7 @@ import org.antlr.v4.runtime.*;
 
 import cool.ast.ASTCreator;
 import cool.ast.ASTNode;
+import cool.compile.CodeEmitter;
 import cool.lexparse.*;
 import cool.lexparse.CoolParser.CoolTextContext;
 import cool.semantic.SymbolTableChecker;
@@ -128,6 +129,7 @@ public class CoolRunnerImpl implements CoolRunner
 	/**
 	 * create AST
 	 */
+	@Override
 	public void createAST() {
 		// TODO Auto-generated method stub
 		parseTree = parse();
@@ -150,6 +152,7 @@ public class CoolRunnerImpl implements CoolRunner
 	 * Type Check
 	 * @return type check AST
 	 */
+	@Override
 	public ASTNode typecheck() {
 		createAST();
 		ast.accept(new SymbolTableChecker());
@@ -158,9 +161,17 @@ public class CoolRunnerImpl implements CoolRunner
 		
 	}
 
+	/**
+	 * Compile
+	 * @return bytecodes
+	 */
+	@Override
 	public Map<String, byte[]> compile() {
-		// TODO Auto-generated method stub
-		return null;
+		typecheck();
+		CodeEmitter emitter = new CodeEmitter();
+		ast.accept(emitter);
+		
+		return emitter.getBytecodes();
 	}
 
 	public ParserRuleContext getParseTree() {

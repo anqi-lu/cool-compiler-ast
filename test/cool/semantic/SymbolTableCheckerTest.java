@@ -46,7 +46,8 @@ class SymbolTableCheckerTest {
 			"list.cl", 
 			"hello_01.cl",
 			"hello_02.cl",
-			"hello_03.cl"
+			"hello_03.cl",
+			"hello_09.cl"
 	})
 	void typeCheckFile(String f) throws IOException {
 		doSymbolCheckFromFile("testfiles/" + f);
@@ -55,6 +56,9 @@ class SymbolTableCheckerTest {
 	@ParameterizedTest
 	@ValueSource(strings = {
 			"wrong6.cl",
+			"wrong8.cl",
+			"wrong14.cl",
+			"wrong15.cl"
 	})
 	void typeCheckWrongFile(String f) throws IOException {
 		assertThrows(CoolException.class, () -> doSymbolCheckFromFile("testfiles/" + f));

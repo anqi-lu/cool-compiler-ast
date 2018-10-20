@@ -74,6 +74,8 @@ class TypeCheckerTest {
 			"hello_04.cl",
 			"hello_05.cl",
 			"hello_06.cl",
+			"hello_07.cl",
+			"hello_08.cl"
 	})
 	void typeCheckFile(String f) throws IOException {
 		doTypeCheckFromFile("testfiles/" + f);
@@ -91,7 +93,10 @@ class TypeCheckerTest {
 			"wrong8.cl",
 			"wrong9.cl",
 			"wrong10.cl",
-			"wrong11.cl"
+			"wrong11.cl",
+			"wrong12.cl",
+			"wrong13.cl",
+			"wrong14.cl"
 	})
 	void typeCheckWrongFile(String f) throws IOException {
 		assertThrows(CoolException.class, () -> doTypeCheckFromFile("testfiles/" + f));

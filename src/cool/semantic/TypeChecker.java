@@ -1,9 +1,7 @@
 package cool.semantic;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import cool.ast.ASTBaseVisitor;
@@ -11,8 +9,6 @@ import cool.ast.ASTNode;
 import cool.ast.ASTNodeFactory.Assign;
 import cool.ast.ASTNodeFactory.BinaryExpr;
 import cool.ast.ASTNodeFactory.BinaryExpr.BinaryOperatorType;
-import cool.ast.ASTNodeFactory.BinaryExpr.BinaryOperatorType.*;
-import cool.ast.ASTNodeFactory.UnaryExpr.UnaryOperatorType;
 import cool.ast.ASTNodeFactory.Case;
 import cool.ast.ASTNodeFactory.CaseAlt;
 import cool.ast.ASTNodeFactory.CoolText;
@@ -33,10 +29,8 @@ import cool.symbol.ClassDescriptor;
 import cool.symbol.MethodDescriptor;
 import cool.symbol.SymbolTable;
 import cool.symbol.TableManager;
-import cool.symbol.Binding;
 import cool.symbol.BindingFactory.ClassBinding;
 import cool.symbol.BindingFactory.MethodBinding;
-import cool.symbol.BindingFactory.ObjectBinding;
 import cool.utility.CoolException;
 
 public class TypeChecker extends ASTBaseVisitor<String>{
@@ -44,7 +38,6 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	private TableManager tm;
 	private List<String> errors = new ArrayList<String>();
 	private ClassBinding currentClass = null;
-	private SymbolTable currentTable;
 	
 	private static final String TYPE_OBJECT = "Object";
 	private static final String TYPE_IO = "IO";
@@ -57,10 +50,11 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 		tm = TableManager.getInstance();
 	}
 
-	/**
+	/*
 	 * visit the CoolText node 
-	 * check bindings
+	 * walk the whole AST
 	 * throw exception for errors
+	 * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.CoolText)
 	 */
 	@Override
 	public String visit(CoolText node) {
@@ -71,16 +65,18 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			for (String s: errors) {
 				System.err.println("====error==== " + s);
 			}
-			throw new CoolException("[TypeChecker] found errors in type!");
+			throw new CoolException("[TypeChecker] found errors in type checking!");
 		}
 		
 		return null;
 	}
 	
-	/**
-	 * visit Type node
+	/*
+	 * Visit Type node
 	 * look for classBinding in the symbol table
 	 * update the current scope and then visit its children
+	 * 
+	 * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Type)
 	 */
 	@Override
 	public String visit(Type node) {
@@ -89,43 +85,36 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	}
 	
 	/*
-	 * visit Variable node
+	 * Visit Variable node
 	 * It can be either just a variable init or plus assignment
 	 * if assignment, check if the exprType conforms to varType
 	 * and returns exprType
-	 * ohterwise return varType
+	 * Otherwise return varType
+	 * 
 	 * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Variable)
 	 */
 	@Override
 	public String visit(Variable node) {
-		System.out.println("[TypeChecker] visiting variable (type checker)");
-		List<String> types = getChildrenTypes(node);
-		String varType = types.get(0);
+		String varType = getChildTypeByIndex(node, 0);
 		
-		if (types.size() == 2) { // if there is an assignment
-			String exprType = types.get(1);
-			
-			String z = "ExprType: " + exprType +
-					" and VarType: " + varType 
-					+ " in variable assignment.";
-			
-			System.out.println(z);
-			if (!conformsTo(exprType, varType, currentClass.getClassDescriptor().className)) {
+		if (node.children.size() == 2) { // if there is an assignment
+			String exprType = getChildTypeByIndex(node, 1);
+
+			if (!conformsTo(exprType, varType, 
+					currentClass.getClassDescriptor().className)) {
 				String e = "ExprType: " + exprType +
 						" doesn't conform to VarType: " + varType 
 						+ " in variable init assignment.";
 				errors.add(e);
-				// throw new CoolException(e);
 			}
 			
-			System.out.println("[TypeChecker] variable is type: " + exprType);
 			return exprType;
 		} 
 		return varType;
 	}
 
 	/*
-	 * visit Variable node
+	 * Visit Variable node
 	 * check for object binding
 	 * return the type the id has been assigned to
 	 * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Formal)
@@ -142,31 +131,20 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 		if (!idType.equals(typeName)) {
 			String e = "Variable id had been defined for another type.";
 			errors.add(e);
-			throw new CoolException(e);
 		}
 	
 		return typeName;
 	}
 
-	/**
-	 * visit Method node
+	/*
+	 * Visit Method node
 	 * check for method binding, method name, and return type 
+	 * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Method)
 	 */
 	@Override
 	public String visit(Method node) {
-		System.out.println("[Typechecker] visiting Method");
 		String returnType = node.descriptor.returnType;
-		
-		returnType = this.checkForSelfType(returnType);
-		
-		
-		System.out.println("[debug] defining method: " +
-				node.descriptor.methodName
-				+ " whose in class "
-				+ currentClass.getClassDescriptor().className
-				+ " and its type is " + returnType);
-		
-		
+		returnType = checkForSelfType(returnType);
 		visitChildren(node);
 		
 		return returnType;
@@ -179,8 +157,8 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(ExprList node) {
-		System.out.println("[Typechecker] visiting ExprList");
 		visitChildren(node);
+		
 		return getChildTypeByIndex(node, node.children.size() - 1);
 	}
 	
@@ -191,13 +169,7 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(ParamExpr node) {
-		System.out.println("[TypeChecker] visting paranexpr. (tpechecker)");
-		ASTNode unwrappedNode = unwrapParans(node);
-		
-		String res = node.getChild(0).accept(this);
-		System.out.println("[TypeChecker] visting paranexpr: " + res);
-
-		return res;
+		return getChildTypeByIndex(node, 0);
 	}
 	
 	/*
@@ -208,28 +180,18 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(Assign node) {
-		System.out.println("[Typechecker] visiting Assign");
-		Boolean res = conformsTo("Str", "Int", null);
-		System.out.println("Str and Int conforms to " + res.toString());
-		
-		
 		String varType = getChildTypeByIndex(node, 0);
 		String exprType = getChildTypeByIndex(node, 1);
-		
-//		exprType = this.checkForSelfType(exprType);
-		
+				
 		System.out.println("[TypeChecker Assign] exprType is: " + exprType);
 
-		if (!conformsTo(exprType, varType, currentClass.getClassDescriptor().className)) { //TODO
-			String e = "ExprType: " + exprType +
+		if (!conformsTo(exprType, varType, currentClass.getClassDescriptor().className)) { 
+			String e = "[Typechecker Assign] ExprType: " + exprType +
 					" doesn't conform to VarType: " + varType 
 					+ " in variable init assignment.";
 			errors.add(e);
-			throw new CoolException(e);
 		}
-		System.out.println("getting type of assign node: " + exprType);
 		return exprType;
-
 	}
 	
 	/*
@@ -238,10 +200,10 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(BinaryExpr node) {
-		System.out.println("getting type of binary node");
 		BinaryOperatorType operatorType = node.operatorType;
 		List<String> expectedTypes = new ArrayList<>();
 		String returnType = null;
+		
 		switch (operatorType) { 
 		case PLUS: // fall through
 		case MINUS:
@@ -250,7 +212,7 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			expectedTypes.add(TYPE_INT);
 			returnType = TYPE_INT;
 			break;
-		case EQUAL:
+		case EQUAL: // fall through
 		case NOT_EQUAL:
 			expectedTypes.add(TYPE_INT);
 			expectedTypes.add(TYPE_STR);
@@ -272,27 +234,35 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			String typeLeft = types.get(0);
 			String typeRight = types.get(1);
 
+			if (operatorType == BinaryOperatorType.EQUAL 
+					|| operatorType == BinaryOperatorType.NOT_EQUAL) {
+				if (!expectedTypes.contains(typeLeft) && !expectedTypes.contains(typeRight)) {
+					return returnType; 
+				}	
+			} 
 			if (!typeLeft.equals(typeRight)) {
 				String e = "[TypeCheck BinaryExpr] Exprs for binary expression not matching."
 						+ " typeleft: " + typeLeft
 						+ " typeRight: " + typeRight;
 				errors.add(e);
-				throw new CoolException(e);
 			}
+			
 			if (!expectedTypes.contains(typeLeft)) {
 				String e = "[TypeCheck BinaryExpr] unexpected expr type.";
 				errors.add(e);
 				throw new CoolException(e);
 			}		
 		} else {
-			System.out.println("BinaryExpr doesn't have two children!");
+			String e = "[TypeCheck BinaryExpr] two children expected but got " 
+					+ node.children.size() + " child(ren).";
+			errors.add(e);
 		}
 
 		return returnType;
 	}
 	
 	/*
-	 * (non-Javadoc)
+	 * visit UnaryExpr Node
 	 * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.UnaryExpr)
 	 */
 	@Override 
@@ -318,10 +288,8 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			String e = "[TypeCheck UnaryExpr] expression type not valid for operator "
 					+ node.operatorType;
 			errors.add(e);
-			throw new CoolException(e);
 		}
 		
-		System.out.println("getting type of unary node: " + returnType);
 		return returnType;
 	}
 	
@@ -331,19 +299,16 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(If node) {
-		System.out.println("getting type of if node");
 		List<String> types = getChildrenTypes(node);
 		String typeCond = types.get(0);
 		String typeThen = types.get(1);
 		String typeElse = types.get(2);
-		// make sure cond is bool
+
 		if (!typeCond.equals(TYPE_BOOL)) {
 			String e = "[TypeCheck If] condition is not boolean.";
 			errors.add(e);
-			throw new CoolException(e);
 		}
 		
-		System.out.println("[typecheck if] the thenType is: " + typeThen + "the elseType is: " + typeElse);
 		return leastUpperBound(typeThen, typeElse);
 	}
 	
@@ -353,13 +318,11 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(While node) {
-		System.out.println("getting type of while node");
 		String typeCond = getChildTypeByIndex(node, 0);
-		// make sure cond is bool
+
 		if (!typeCond.equals(TYPE_BOOL)) {
 			String e = "[TypeCheck If] condition is not boolean.";
 			errors.add(e);
-			throw new CoolException(e);
 		}
 		return TYPE_OBJECT;
 	}
@@ -370,9 +333,7 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Case)
 	 */
 	@Override 
-	public String visit(Case node) {
-		System.out.println("getting type of case node");
-		
+	public String visit(Case node) {		
 		String condType = getChildTypeByIndex(node, 0);
 		List<String> caseAltTypes = getChildrenTypesByRange(node, 1, node.children.size() - 2);
 		
@@ -385,22 +346,21 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.CaseAlt)
 	 */
 	@Override 
-	public String visit(CaseAlt node) {
-		System.out.println("getting type of casealt node");
-		
-		return visit(node.getChild(0));
+	public String visit(CaseAlt node) {		
+		return getChildTypeByIndex(node, 0);
 	}
 	
 	/*
 	 * Visit Let node
-	 * TODO No init and init
+	 * No-Init and Init both return the type in the expression, 
+	 * which is the last child of Let node
 	 * @see cool.ast.ASTVisitor#visit(cool.ast.ASTNodeFactory.Let)
 	 */
 	@Override 
 	public String visit(Let node) {
-		String exprType = getChildTypeByIndex(node, 0);
+		visitChildren(node);
+		String exprType = getChildTypeByIndex(node, node.children.size() - 1);
 		
-		System.out.println("getting type of let node: " + exprType);
 		return exprType;
 	}
 	
@@ -411,16 +371,11 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(New node) {
-		System.out.println("[TypeChecker] visiting new (type checker)");
-		
-		System.out.println("getting type of New node: " + node.type);
-		return node.getChild(0).accept(this);
+		return getChildTypeByIndex(node, 0);
 	}
 	
 	@Override
 	public String visit(MethodCall node) {
-		System.out.println("[TypeChecker] visiting method call (type checker) " 
-				+ node.methodName);
 		MethodBinding mb = null;
 		MethodDescriptor md = null;
 		String returnType = null;
@@ -443,8 +398,15 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 				mb = tm.lookupMethodInClass(name, objectType);
 			}
 			
+			// second pass - now sure that method is not defined 
+			if (mb == null) {
+				String e = "[TypeChecker] Method: " + name + " is not defined.";
+				errors.add(e);
+				break;
+			}
 			
 			md = mb.getMethodDescriptor();
+			
 			
 			returnType = md.getReturnType();
 			returnType = this.checkForSelfType(returnType);
@@ -453,7 +415,6 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			if (node.children.size() - 2 != md.argumentTypes.size()) {
 				String e = "[TypeChecker MethodCall] argument number not matching";
 				errors.add(e);
-				throw new CoolException(e);
 			}
 			// check argument types 
 			int i = 2;
@@ -463,7 +424,6 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 						currentClass.getClassDescriptor().className)) {
 					String e = "[TypeChecker MethodCall] argument type not matching.";
 					errors.add(e);
-					throw new CoolException(e);
 				}
 			}
 			break;
@@ -473,20 +433,17 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 					currentClass.getClassDescriptor().className);
 	
 			if (mb == null) {
-				System.out.println("method binding not found");
-				String e = "[TypeChecker] Method Binding not found.";
+				String e = "[TypeChecker MethodCall] Method Binding not found.";
 				errors.add(e);
-				throw new CoolException(e);	
 			}
 			
 			md = mb.getMethodDescriptor();	
 			returnType = md.getReturnType();
 		
-					// check argument size
+			// check argument size
 			if (node.children.size() - 1 != md.argumentTypes.size()) {
 				String e = "[TypeChecker MethodCall] argument number not matching";
 				errors.add(e);
-				// throw new CoolException(e);
 			}
 			// check argument types 
 			int j = 1;
@@ -495,16 +452,13 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 				if (!conformsTo(argType, paramType, currentClass.getClassDescriptor().className)) {
 					String e = "[TypeChecker MethodCall] argument type not matching.";
 					errors.add(e);
-					throw new CoolException(e);
 				}
 			}
-			
-			System.out.println("in methodcall local and the current class is: " + currentClass.getClassDescriptor().className + "======");
-		
+					
 			returnType = this.checkForSelfType(returnType);
-			System.out.println("in methodcall local " + md.methodName + " and the return type is: " + returnType + "======");
 			break;
 		}
+		
 		return returnType;
 	}
 	
@@ -514,6 +468,7 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	@Override 
 	public String visit(Terminal node) {
+		
 		String type = TYPE_OBJECT;
 		switch (node.terminalType) {
 		case tInt:
@@ -527,6 +482,7 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			break;
 		case tID: 
 			type = node.binding.getSymbolType();
+			type = this.checkForSelfType(type);
 			break;
 		case tType:
 			type = node.token.getText();
@@ -536,32 +492,16 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 			break;
 		}
 		
-		System.out.println("getting type of terminal node: " + type);
 		return type;
 	}
 	
 	@Override
 	public String visitChildren(ASTNode node) {
-		System.out.println("visting children.(AST V)");
 		for (ASTNode child : node.children) {
-			System.out.println("visting child.(AST V)");
 			child.accept(this);
 		}
 		return null;
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	// Helper Methods 
@@ -585,8 +525,6 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 * @return least upper bound of the two types 
 	 */
 	public String leastUpperBound(String type1, String type2) {
-//		System.out.println(type1);
-//		System.out.println(type2);
 		// go through inherits for both 
 		if (type1.equals(type2)) {
 			return type1;
@@ -612,7 +550,7 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 		if (tm.lookupClass(type) == null) {
 			throw new CoolException("Type Error!");
 		}
-//		
+		
 		ClassDescriptor cd = tm.lookupClass(type).getClassDescriptor();
 
 		List<String> ancestors = new ArrayList<>();
@@ -694,7 +632,9 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	 */
 	public Boolean conformsTo(String type1, String type2, String currentClassName) {
 		if (type1 == null || type2 == null) {
-			throw new CoolException("[TypeChecker] one of the types is null");
+			String e = "[TypeChecker] Type null error in conformsTo";
+			errors.add(e);
+			return false;
 		}
 		
 		// type 2 will be one of type1's ancestors
@@ -731,7 +671,6 @@ public class TypeChecker extends ASTBaseVisitor<String>{
 	private String checkForSelfType(String type) {
 		String resType = type;
 		if (type.equals(TYPE_SELF)) {
-			System.out.println("aaasdaff gdf");
 			resType = "SELF_" + currentClass.getClassDescriptor().className;
 		} else if (type.length() > 4 && type.substring(0, 4).equals("SELF")) {
 			String[] types = type.split("_");

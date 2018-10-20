@@ -1,4 +1,3 @@
-(* wrong let *) 
 class Main {
     i : Int;
     j : Int;

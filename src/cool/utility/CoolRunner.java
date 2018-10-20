@@ -14,7 +14,11 @@
 
 package cool.utility;
 
+import java.util.Map;
+
 import org.antlr.v4.runtime.*;
+
+import cool.ast.ASTNode;
 
 /**
  * The CoolRunner is an object produced by the CoolFactory. It provides handles
@@ -48,4 +52,22 @@ public interface CoolRunner
 	 * @return the parse tree for features
 	 */
 	ParserRuleContext parseFeature();
+	
+	/**
+	 * create AST
+	 */
+	void createAST();
+	
+	/**
+	 * Typecheck
+	 * @return ASTNode
+	 */
+	ASTNode typecheck();
+	
+	/**
+	 * Compile
+	 * @return bytecodes
+	 */
+	Map<String, byte[]> compile();
+	
 }
